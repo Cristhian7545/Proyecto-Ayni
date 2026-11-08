@@ -1,3 +1,4 @@
+import PostGallery from './PostGallery.jsx';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, assetUrl } from '../models/api.js';
@@ -49,13 +50,7 @@ export function PostCard({ post, onChange }) {
   }
   return (
     <PublicacionCard className="real-post bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col h-full">
-      {post.image && (
-        <img
-          src={assetUrl(post.image)}
-          alt={post.title}
-          className="w-full h-52 object-cover"
-        />
-      )}
+      <PostGallery post={post} />
       <div className="p-5 sm:p-6 flex flex-col flex-1 gap-3">
         <div className="flex gap-3 items-center">
           <span className="avatar-thumb">
@@ -70,17 +65,24 @@ export function PostCard({ post, onChange }) {
             )}
           </span>
           <div>
-            <p className="font-semibold">{post.author_name}</p>
+            <Link
+              className="font-semibold hover:underline"
+              to={`/perfil-de-vecino?usuario=${post.author_id}`}
+            >
+              {post.author_name}
+            </Link>
             <p className="text-xs text-on-surface-variant">
               {post.neighborhood} · {post.district}
             </p>
           </div>
           <span className="ml-auto text-xs bg-secondary-container rounded-full px-2 py-1">
-            {post.resolved
-              ? '✓ Resuelto'
-              : post.status === 'completed'
-                ? 'Completado'
-                : 'Disponible'}
+            {post.community_id
+              ? 'Comunidad'
+              : post.resolved
+                ? '✓ Resuelto'
+                : post.status === 'completed'
+                  ? 'Completado'
+                  : 'Disponible'}
           </span>
         </div>
         <h3 className="text-headline-sm text-primary">{post.title}</h3>
@@ -152,7 +154,7 @@ export function PostCard({ post, onChange }) {
           >
             {post.saved ? '✓ Guardado' : 'Guardar'}
           </button>
-          {user?.id !== post.author_id && (
+          {!post.community_id && user?.id !== post.author_id && (
             <button
               type="button"
               className="ayni-primary"
@@ -173,28 +175,30 @@ export function PostCard({ post, onChange }) {
               Contactar
             </button>
           )}
-          {user?.id === post.author_id && post.status === 'active' && (
-            <button
-              type="button"
-              className="ayni-secondary"
-              disabled={!!busy}
-              onClick={() =>
-                action('complete', async () => {
-                  await api(`/posts/${post.id}/status`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ status: 'completed' }),
-                  });
-                  notify({
-                    title: 'Publicación completada',
-                    message:
-                      'Tu publicación ya aparece en el filtro Completados.',
-                  });
-                })
-              }
-            >
-              Marcar completada
-            </button>
-          )}
+          {!post.community_id &&
+            user?.id === post.author_id &&
+            post.status === 'active' && (
+              <button
+                type="button"
+                className="ayni-secondary"
+                disabled={!!busy}
+                onClick={() =>
+                  action('complete', async () => {
+                    await api(`/posts/${post.id}/status`, {
+                      method: 'PATCH',
+                      body: JSON.stringify({ status: 'completed' }),
+                    });
+                    notify({
+                      title: 'Publicación completada',
+                      message:
+                        'Tu publicación ya aparece en el filtro Completados.',
+                    });
+                  })
+                }
+              >
+                Marcar completada
+              </button>
+            )}
         </div>
         {error && (
           <p role="alert" className="text-error text-sm">
@@ -259,7 +263,7 @@ export function PostCard({ post, onChange }) {
     </PublicacionCard>
   );
 }
-export default function LivePublications({ module, own = false }) {
+export default function LivePublications({ module, own = false, communityId }) {
   const { user, loading: sessionLoading } = useSession();
   const [scope, setScope] = useState('own'),
     [status, setStatus] = useState('active'),
@@ -292,6 +296,7 @@ export default function LivePublications({ module, own = false }) {
       status,
     });
     if (module) params.set('module', module);
+    if (communityId) params.set('community', communityId);
     if (own && scope === 'own') params.set('author', user.id);
     if (own && scope === 'saved') params.set('saved', '1');
     if (category) params.set('category', category);
@@ -314,6 +319,7 @@ export default function LivePublications({ module, own = false }) {
     };
   }, [
     module,
+    communityId,
     own,
     scope,
     user?.id,
@@ -352,7 +358,9 @@ export default function LivePublications({ module, own = false }) {
       <h2 className="text-headline-md text-primary">
         {own
           ? 'Mis publicaciones y guardados'
-          : 'Publicaciones de la comunidad'}
+          : communityId
+            ? 'Muro de publicaciones'
+            : 'Publicaciones de la comunidad'}
       </h2>
       {own && (
         <div
@@ -381,55 +389,59 @@ export default function LivePublications({ module, own = false }) {
           ))}
         </div>
       )}
-      <div
-        className="filter-grid"
-        role="group"
-        aria-label="Estado de publicaciones"
-      >
-        {[
-          ['active', 'Solo disponibles', data.counts.active],
-          ['completed', 'Completados', data.counts.completed],
-          ['all', 'Todos', data.counts.total],
-        ].map(([value, label, count]) => (
-          <button
-            key={value}
-            type="button"
-            className={status === value ? 'ayni-primary' : 'ayni-secondary'}
-            aria-pressed={status === value}
-            onClick={() => {
-              choose(setStatus)(value);
-              setCategory('');
-            }}
+      {!communityId && (
+        <>
+          <div
+            className="filter-grid"
+            role="group"
+            aria-label="Estado de publicaciones"
           >
-            {label} ({count})
-          </button>
-        ))}
-      </div>
-      <div
-        className="filter-grid"
-        role="group"
-        aria-label="Categoría de publicaciones"
-      >
-        <button
-          type="button"
-          className={!category ? 'ayni-primary' : 'ayni-secondary'}
-          aria-pressed={!category}
-          onClick={() => choose(setCategory)('')}
-        >
-          Todas ({totalCategories})
-        </button>
-        {categories.map((c) => (
-          <button
-            key={c}
-            type="button"
-            className={category === c ? 'ayni-primary' : 'ayni-secondary'}
-            aria-pressed={category === c}
-            onClick={() => choose(setCategory)(c)}
+            {[
+              ['active', 'Solo disponibles', data.counts.active],
+              ['completed', 'Completados', data.counts.completed],
+              ['all', 'Todos', data.counts.total],
+            ].map(([value, label, count]) => (
+              <button
+                key={value}
+                type="button"
+                className={status === value ? 'ayni-primary' : 'ayni-secondary'}
+                aria-pressed={status === value}
+                onClick={() => {
+                  choose(setStatus)(value);
+                  setCategory('');
+                }}
+              >
+                {label} ({count})
+              </button>
+            ))}
+          </div>
+          <div
+            className="filter-grid"
+            role="group"
+            aria-label="Categoría de publicaciones"
           >
-            {labels[c] || c} ({data.counts.categories[c] || 0})
-          </button>
-        ))}
-      </div>
+            <button
+              type="button"
+              className={!category ? 'ayni-primary' : 'ayni-secondary'}
+              aria-pressed={!category}
+              onClick={() => choose(setCategory)('')}
+            >
+              Todas ({totalCategories})
+            </button>
+            {categories.map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={category === c ? 'ayni-primary' : 'ayni-secondary'}
+                aria-pressed={category === c}
+                onClick={() => choose(setCategory)(c)}
+              >
+                {labels[c] || c} ({data.counts.categories[c] || 0})
+              </button>
+            ))}
+          </div>
+        </>
+      )}
       <p className="text-sm text-on-surface-variant" aria-live="polite">
         {loading ? 'Cargando…' : `${data.total} publicaciones en este filtro`}
       </p>

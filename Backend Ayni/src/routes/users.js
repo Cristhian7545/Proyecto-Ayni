@@ -39,10 +39,40 @@ export function userRoutes(db, auth) {
     ]);
     res.json({ user: publicUser(rows[0]) });
   });
+  router.get('/me/communities', auth, async (req, res) => {
+    const [communities] = await db.execute(
+      "SELECT c.*,(SELECT COUNT(*) FROM miembros_comunidad WHERE community_id=c.id) AS members FROM comunidades c JOIN miembros_comunidad m ON m.community_id=c.id WHERE m.user_id=? AND c.status='approved' ORDER BY m.joined_at DESC,c.id DESC",
+      [req.user.id],
+    );
+    res.json({
+      communities: communities.map((c) => ({
+        ...c,
+        members: Number(c.members),
+      })),
+    });
+  });
+  router.get('/:id/communities', async (req, res) => {
+    const userId = uuid.parse(req.params.id);
+    const [users] = await db.execute(
+      'SELECT id FROM usuarios WHERE id=? AND deleted_at IS NULL',
+      [userId],
+    );
+    if (!users.length) fail(404, 'Vecino no encontrado.');
+    const [communities] = await db.execute(
+      "SELECT c.id,c.name,c.description,c.district,c.category,(SELECT COUNT(*) FROM miembros_comunidad WHERE community_id=c.id) AS members FROM comunidades c JOIN miembros_comunidad m ON m.community_id=c.id WHERE m.user_id=? AND c.status='approved' ORDER BY m.joined_at DESC,c.id DESC",
+      [userId],
+    );
+    res.json({
+      communities: communities.map((c) => ({
+        ...c,
+        members: Number(c.members),
+      })),
+    });
+  });
   router.get('/:id', async (req, res) => {
     const userId = uuid.parse(req.params.id);
     const [rows] = await db.execute(
-      'SELECT id,name,district,neighborhood,bio,avatar_url AS photo,created_at FROM usuarios WHERE id=?',
+      'SELECT id,name,district,neighborhood,bio,avatar_url AS photo,created_at FROM usuarios WHERE id=? AND deleted_at IS NULL',
       [userId],
     );
     if (!rows.length) fail(404, 'Vecino no encontrado.');
@@ -51,7 +81,7 @@ export function userRoutes(db, auth) {
   router.get('/:id/reviews', async (req, res) => {
     const userId = uuid.parse(req.params.id);
     const [rows] = await db.execute(
-      'SELECT r.id,r.body,r.created_at,u.name AS author,p.title AS publication FROM resenas r JOIN usuarios u ON u.id=r.author_id JOIN publicaciones p ON p.id=r.post_id WHERE r.reviewed_user_id=? ORDER BY r.id DESC LIMIT 50',
+      'SELECT r.id,r.body,r.created_at,u.name AS author,p.title AS publication FROM resenas r JOIN usuarios u ON u.id=r.author_id JOIN publicaciones p ON p.id=r.post_id WHERE p.community_id IS NULL AND r.reviewed_user_id=? ORDER BY r.id DESC LIMIT 50',
       [userId],
     );
     res.json({ reviews: rows });
@@ -64,7 +94,7 @@ export function userRoutes(db, auth) {
       .strict()
       .parse(req.body);
     const [posts] = await db.execute(
-      "SELECT id FROM publicaciones WHERE id=? AND author_id=? AND status='completed'",
+      "SELECT id FROM publicaciones WHERE id=? AND author_id=? AND community_id IS NULL AND status='completed'",
       [input.postId, userId],
     );
     if (!posts.length)

@@ -1,9 +1,13 @@
+import path from 'node:path';
+import { config } from '../config.js';
+import { communityAccess } from '../community-access.js';
 import { Router } from 'express';
 import { z } from 'zod';
-import { id, postSchema, text, paging } from '../validation.js';
+import { id, uuid, postSchema, text, paging } from '../validation.js';
 import { fail, transact } from '../http.js';
 const select = `SELECT p.*,u.name AS author_name,u.avatar_url AS author_photo,
  (SELECT url FROM archivos_multimedia WHERE post_id=p.id ORDER BY created_at LIMIT 1) AS image,
+ (SELECT JSON_ARRAYAGG(JSON_OBJECT('id',id,'url',url)) FROM archivos_multimedia WHERE post_id=p.id) AS images,
  (SELECT COUNT(*) FROM me_gusta_publicaciones WHERE post_id=p.id) AS likes,
  (SELECT COUNT(*) FROM comentarios WHERE post_id=p.id) AS comments_count,
  EXISTS(SELECT 1 FROM me_gusta_publicaciones WHERE post_id=p.id AND user_id=?) AS liked,
@@ -13,24 +17,35 @@ const select = `SELECT p.*,u.name AS author_name,u.avatar_url AS author_photo,
  a.days,a.start_time,a.end_time,a.modality
  FROM publicaciones p JOIN usuarios u ON u.id=p.author_id LEFT JOIN detalles_trueque x ON x.post_id=p.id
  LEFT JOIN detalles_apoyo s ON s.post_id=p.id LEFT JOIN detalles_emprendimiento b ON b.post_id=p.id LEFT JOIN disponibilidad a ON a.post_id=p.id`;
-const dto = (row) => ({
-  ...row,
-  pinned: !!Number(row.pinned),
-  resolved: !!Number(row.resolved),
-  liked: !!Number(row.liked),
-  saved: !!Number(row.saved),
-  likes: Number(row.likes),
-  comments_count: Number(row.comments_count),
-  accepts_barter: !!Number(row.accepts_barter),
-});
+const dto = (row) => {
+  const media =
+    typeof row.images === 'string' ? JSON.parse(row.images) : row.images || [];
+  const images = media.map((m) =>
+    row.community_id ? '/api/posts/' + row.id + '/media/' + m.id : m.url,
+  );
+  return {
+    ...row,
+    image: row.community_id ? images[0] || null : row.image,
+    images,
+    pinned: !!Number(row.pinned),
+    resolved: !!Number(row.resolved),
+    liked: !!Number(row.liked),
+    saved: !!Number(row.saved),
+    likes: Number(row.likes),
+    comments_count: Number(row.comments_count),
+    accepts_barter: !!Number(row.accepts_barter),
+  };
+};
 export function postRoutes(db, auth, optionalAuth) {
   const router = Router();
   async function visiblePost(req, res, next) {
     const [rows] = await db.execute(
-      'SELECT id FROM publicaciones WHERE id=? AND moderated_at IS NULL',
+      'SELECT id,community_id FROM publicaciones WHERE id=? AND moderated_at IS NULL',
       [id.parse(req.params.id)],
     );
     if (!rows.length) fail(404, 'Publicación no encontrada.');
+    if (rows[0].community_id)
+      await communityAccess(db, rows[0].community_id, req.user);
     next();
   }
   router.use(optionalAuth);
@@ -39,6 +54,17 @@ export function postRoutes(db, auth, optionalAuth) {
       clauses = ['p.moderated_at IS NULL'],
       values = [];
     const viewer = req.user?.id || null;
+    if (req.query.community) {
+      const group = id.parse(req.query.community);
+      await communityAccess(db, group, req.user);
+      clauses.push('p.community_id=?');
+      values.push(group);
+    } else if (req.query.author || req.query.saved === '1') {
+      clauses.push(
+        "(p.community_id IS NULL OR EXISTS(SELECT 1 FROM comunidades c JOIN miembros_comunidad m ON m.community_id=c.id WHERE c.id=p.community_id AND c.status='approved' AND m.user_id=?))",
+      );
+      values.push(viewer);
+    } else clauses.push('p.community_id IS NULL');
     if (req.query.module) {
       clauses.push('p.module=?');
       values.push(
@@ -100,7 +126,7 @@ export function postRoutes(db, auth, optionalAuth) {
       select +
         ' WHERE ' +
         where +
-        ` ORDER BY p.id DESC LIMIT ${limit} OFFSET ${offset}`,
+        ` ORDER BY p.pinned DESC,p.id DESC LIMIT ${limit} OFFSET ${offset}`,
       [viewer, viewer, ...values],
     );
     res.json({
@@ -118,8 +144,12 @@ export function postRoutes(db, auth, optionalAuth) {
       neighborhood: req.body?.neighborhood ?? req.user.neighborhood,
     });
     const postId = await transact(db, async (conn) => {
+      if (input.communityId)
+        await communityAccess(conn, input.communityId, req.user, {
+          admin: false,
+        });
       const [result] = await conn.execute(
-        'INSERT INTO publicaciones(author_id,module,category,title,description,district,neighborhood) VALUES(?,?,?,?,?,?,?)',
+        'INSERT INTO publicaciones(author_id,module,category,title,description,district,neighborhood,community_id) VALUES(?,?,?,?,?,?,?,?)',
         [
           req.user.id,
           input.module,
@@ -128,6 +158,7 @@ export function postRoutes(db, auth, optionalAuth) {
           input.description,
           input.district,
           input.neighborhood,
+          input.communityId ?? null,
         ],
       );
       const postId = String(result.insertId);
@@ -157,10 +188,13 @@ export function postRoutes(db, auth, optionalAuth) {
           'INSERT INTO disponibilidad(post_id,days,start_time,end_time,modality) VALUES(?,?,?,?,?)',
           [postId, input.days, input.start, input.end, input.mode],
         );
-      if (input.mediaId) {
+      for (const mediaId of new Set([
+        ...(input.mediaIds || []),
+        ...(input.mediaId ? [input.mediaId] : []),
+      ])) {
         const [media] = await conn.execute(
           'UPDATE archivos_multimedia SET post_id=? WHERE id=? AND owner_id=? AND post_id IS NULL',
-          [postId, input.mediaId, req.user.id],
+          [postId, mediaId, req.user.id],
         );
         if (!media.affectedRows)
           fail(400, 'La imagen no está disponible para esta publicación.');
@@ -174,7 +208,7 @@ export function postRoutes(db, auth, optionalAuth) {
     const [rows] = await db.execute(
       'SELECT * FROM (' +
         select +
-        " WHERE p.status='active' AND p.moderated_at IS NULL AND p.resolved=0 AND (p.pinned=1 OR EXISTS(SELECT 1 FROM me_gusta_publicaciones l WHERE l.post_id=p.id) OR EXISTS(SELECT 1 FROM comentarios c WHERE c.post_id=p.id))) featured ORDER BY pinned DESC,(likes+comments_count) DESC,id DESC LIMIT 6",
+        " WHERE p.community_id IS NULL AND p.status='active' AND p.moderated_at IS NULL AND p.resolved=0 AND (p.pinned=1 OR EXISTS(SELECT 1 FROM me_gusta_publicaciones l WHERE l.post_id=p.id) OR EXISTS(SELECT 1 FROM comentarios c WHERE c.post_id=p.id))) featured ORDER BY pinned DESC,(likes+comments_count) DESC,id DESC LIMIT 6",
       [viewer, viewer],
     );
     res.json({ posts: rows.map(dto) });
@@ -193,9 +227,11 @@ export function postRoutes(db, auth, optionalAuth) {
       ],
     );
     if (!rows.length) fail(404, 'Publicación no encontrada.');
+    if (rows[0].community_id)
+      await communityAccess(db, rows[0].community_id, req.user);
     res.json({ post: dto(rows[0]) });
   });
-  router.patch('/:id/status', auth, async (req, res) => {
+  router.patch('/:id/status', auth, visiblePost, async (req, res) => {
     const postId = id.parse(req.params.id),
       input = z
         .object({ status: z.enum(['active', 'completed', 'archived']) })
@@ -228,7 +264,7 @@ export function postRoutes(db, auth, optionalAuth) {
     );
     res.json({ liked: true, likes: Number(r.n) });
   });
-  router.delete('/:id/like', auth, async (req, res) => {
+  router.delete('/:id/like', auth, visiblePost, async (req, res) => {
     const postId = id.parse(req.params.id);
     await db.execute(
       'DELETE FROM me_gusta_publicaciones WHERE post_id=? AND user_id=?',
@@ -253,6 +289,15 @@ export function postRoutes(db, auth, optionalAuth) {
       [id.parse(req.params.id), req.user.id],
     );
     res.json({ saved: false });
+  });
+  router.get('/:id/media/:mediaId', auth, visiblePost, async (req, res) => {
+    const [rows] = await db.execute(
+      'SELECT url FROM archivos_multimedia WHERE id=? AND post_id=?',
+      [uuid.parse(req.params.mediaId), id.parse(req.params.id)],
+    );
+    if (!rows.length) fail(404, 'Foto no encontrada.');
+    res.set('Cache-Control', 'private, no-store');
+    res.sendFile(path.join(config.uploads, path.basename(rows[0].url)));
   });
   router.get('/:id/comments', visiblePost, async (req, res) => {
     const [rows] = await db.execute(

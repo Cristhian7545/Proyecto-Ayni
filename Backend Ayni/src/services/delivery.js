@@ -14,7 +14,7 @@ export const smsReady = () =>
     process.env.TWILIO_AUTH_TOKEN &&
     process.env.TWILIO_FROM
   );
-export async function sendResetEmail(email, link) {
+export async function sendRecoveryCode(email, code) {
   const secure = process.env.SMTP_SECURE === 'true';
   const transport = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -29,8 +29,9 @@ export async function sendResetEmail(email, link) {
     return await transport.sendMail({
       from: process.env.MAIL_FROM,
       to: email,
-      subject: 'Recupera tu acceso a Ayni',
-      text: `Recibimos una solicitud para cambiar tu contraseña de Ayni.\n\n${link}\n\nEste enlace caduca en 15 minutos y solo funciona una vez. Si no lo solicitaste, ignora este correo.`,
+      subject: 'Tu código de recuperación de Ayni',
+      text: `Tu código de recuperación de Ayni es: ${code}\n\nVence en 10 minutos y solo funciona una vez. Si no lo solicitaste, ignora este correo.`,
+      html: `<div style="font-family:Arial,sans-serif;background:#faf3ea;padding:32px;color:#384b35"><h1>Ayni</h1><h2>Confirma tu recuperación</h2><p>Introduce este código en la pantalla de recuperación:</p><p style="font-size:32px;letter-spacing:8px;font-weight:bold;background:white;padding:20px;border-radius:12px">${code}</p><p>Vence en 10 minutos. No compartas este código. Si no lo solicitaste, ignora este correo.</p></div>`,
     });
   } finally {
     transport.close();

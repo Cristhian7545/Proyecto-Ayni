@@ -29,3 +29,21 @@ No hubo una nueva revisión visual automatizada en navegador porque la herramien
 - Cuentas de prueba residuales con los prefijos de esta suite: 0.
 - No se enviaron correos ni SMS reales. SMTP y Twilio no tienen claves configuradas; falta validar entrega real después de configurarlos.
 - No hubo acceso a un navegador interactivo en esta sesión: la revisión visual y de clics en navegador queda pendiente. La verificación de frontend fue mediante compilación y renderizado, no mediante capturas de pantalla.
+
+
+## Actualización: comunidades, perfil y administración
+
+- Muros por comunidad con título, descripción, hasta seis fotos y navegación de regreso. Likes, comentarios y guardados reutilizan el sistema existente.
+- Pertenencia validada en el backend, sin filtración al Inicio. Fotos protegidas mediante API, incluso ante enlaces directos o codificados de uploads.
+- Mis comunidades en el perfil reemplaza recomendaciones. Perfiles reales de autores muestran sus comunidades. Editar perfil y Cambiar contraseña se ubican a la derecha y abren modales.
+- Contactos de emergencia con iconos, colores y enlace oficial gob.pe/547-telefonos-de-emergencia; eliminadas las referencias fijas a San Miguel.
+- Recuperación con código de seis dígitos, confirmación y nueva contraseña; diez minutos, cinco intentos, reemplazo al reenviar, HMAC privado y autorización de cinco minutos tras confirmar.
+- Administración de cuentas: búsqueda, creación, edición, roles y eliminación lógica que revoca sesiones y conserva el contenido de otros vecinos. No permite eliminarse o quitarse el propio rol de administrador.
+- MySQL actualizado con respaldo: 26 tablas. Se conservan las cuentas y publicaciones existentes.
+- Validación final: npm run build correcto; npm run verify con trece vistas y controles nuevos; RUN_DB_TESTS=1 npm test con 25 pruebas aprobadas, cero fallos y cero omitidas.
+- Instalación limpia: 26 tablas y 43 distritos comprobados en una base temporal; eliminada solo esa base al terminar.
+- Autenticación SMTP de Google verificada correctamente con la configuración local. No se enviaron correos ni SMS reales; las pruebas de código utilizan un emisor simulado. La recepción real en bandeja queda pendiente de probar desde la aplicación.
+- Cuentas temporales residuales de las suites: cero. Las fotos temporales se eliminaron.
+- No hay navegador interactivo disponible en esta sesión: la revisión visual y de clics queda pendiente. Se comprobó compilación, renderizado y API.
+
+Guía actual: [ACTUALIZACION-COMUNIDADES.md](./ACTUALIZACION-COMUNIDADES.md). Reinicia backend y frontend; en este equipo la migración ya está aplicada.

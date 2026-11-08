@@ -25,6 +25,9 @@ try {
         [hash, id],
       );
       await conn.execute('DELETE FROM sesiones WHERE user_id=?', [id]);
+      await conn.execute('DELETE FROM codigos_recuperacion WHERE user_id=?', [
+        id,
+      ]);
       await conn.execute(
         'UPDATE tokens_recuperacion SET used_at=UTC_TIMESTAMP() WHERE user_id=?',
         [id],

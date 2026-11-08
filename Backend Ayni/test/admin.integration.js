@@ -195,7 +195,11 @@ test(
           );
           const featured = await request('/posts/featured');
           assert.equal(featured.status, 200, JSON.stringify(featured.data));
-          assert.equal(String(featured.data.posts[0].id), postId);
+          assert.equal(
+            (await request('/posts/' + postId)).data.post.pinned,
+            true,
+          );
+          assert.ok(featured.data.posts.every((p) => !p.community_id));
           assert.equal(featured.data.posts[0].pinned, true);
           assert.equal(
             (
@@ -546,8 +550,14 @@ test(
           assert.deepEqual(found.data, missing.data);
           assert.ok(!JSON.stringify(found.data).includes('token'));
           await eventually(() => outbox.length === 1);
-          const link = new URL(outbox[0].link),
-            token = new URLSearchParams(link.hash.slice(1)).get('token');
+          const code = outbox[0].link;
+          assert.match(code, /^\d{6}$/);
+          const verified = await request('/auth/verify-code', {
+            method: 'POST',
+            body: { email: b.email, code },
+          });
+          assert.equal(verified.status, 200);
+          const token = verified.data.token;
           assert.ok(token);
           assert.equal(outbox[0].to, b.email);
           const [[stored]] = await pool.execute(

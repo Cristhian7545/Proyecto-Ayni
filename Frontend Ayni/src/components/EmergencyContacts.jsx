@@ -1,70 +1,93 @@
-import { useSession } from '../controllers/SessionContext.jsx';
+const contacts = [
+  {
+    name: 'Policía Nacional',
+    number: '105',
+    description: 'Seguridad y auxilio policial',
+    icon: 'local_police',
+    tone: 'blue',
+  },
+  {
+    name: 'Bomberos',
+    number: '116',
+    description: 'Incendios, accidentes y rescate',
+    icon: 'fire_truck',
+    tone: 'red',
+  },
+  {
+    name: 'SAMU',
+    number: '106',
+    description: 'Urgencias y emergencias médicas',
+    icon: 'emergency',
+    tone: 'green',
+  },
+  {
+    name: 'Línea 100',
+    number: '100',
+    description: 'Orientación ante violencia familiar y sexual',
+    icon: 'support_agent',
+    tone: 'purple',
+  },
+];
 export default function EmergencyContacts() {
-  const { user } = useSession();
-  const contacts = [
-    ['Policía Nacional', '105', '105'],
-    ['Bomberos', '116', '116'],
-    ['SAMU', '106', '106'],
-  ];
   return (
-    <section aria-labelledby="emergency-title" className="mt-5">
-      <h2 id="emergency-title" className="text-headline-sm mb-3 text-primary">
-        Contactos de emergencia
-      </h2>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {contacts.map(([name, phone, tel]) => (
+    <section className="emergency-section" aria-labelledby="emergency-title">
+      <div className="emergency-heading">
+        <div>
+          <span className="section-eyebrow">AYUDA A UN TOQUE</span>
+          <h2 id="emergency-title" className="text-headline-md text-primary">
+            Contactos de emergencia
+          </h2>
+          <p>
+            Elige el servicio que necesitas. Desde tu celular puedes llamar
+            directamente.
+          </p>
+        </div>
+        <span
+          className="emergency-badge material-symbols-outlined"
+          aria-hidden="true"
+        >
+          health_and_safety
+        </span>
+      </div>
+      <div className="emergency-grid">
+        {contacts.map((c) => (
           <a
-            key={name}
-            href={'tel:' + tel}
-            className="bg-surface-container-low rounded-xl p-4 flex flex-col gap-2"
+            key={c.number}
+            href={'tel:' + c.number}
+            className={'emergency-card emergency-' + c.tone}
+            aria-label={`Llamar a ${c.name}, ${c.number}`}
           >
-            <span>{name}</span>
-            <strong className="text-headline-md text-primary">{phone}</strong>
+            <span
+              className="emergency-icon material-symbols-outlined"
+              aria-hidden="true"
+            >
+              {c.icon}
+            </span>
+            <h3>{c.name}</h3>
+            <p>{c.description}</p>
+            <div className="emergency-number">
+              <strong>{c.number}</strong>
+              <span className="material-symbols-outlined" aria-hidden="true">
+                call
+              </span>
+            </div>
           </a>
         ))}
-        {user?.district === 'San Miguel' ? (
-          <a
-            href="tel:017159700"
-            className="bg-surface-container-low rounded-xl p-4"
-          >
-            <span>Serenazgo San Miguel</span>
-            <strong className="block text-headline-md text-primary mt-2">
-              01 715 9700
-            </strong>
-          </a>
-        ) : (
-          <a
-            href="https://www.gob.pe/estado"
-            target="_blank"
-            rel="noreferrer"
-            className="bg-surface-container-low rounded-xl p-4"
-          >
-            <span>Serenazgo de {user?.district || 'tu distrito'}</span>
-            <span className="block text-sm text-primary underline mt-2">
-              Consultar directorio municipal
-            </span>
-          </a>
-        )}
       </div>
-      <p className="text-xs text-on-surface-variant mt-2">
-        <a
-          href="https://www.gob.pe/547-telefonos-de-emergencia"
-          target="_blank"
-          rel="noreferrer"
-          className="underline"
-        >
-          Directorio nacional
-        </a>{' '}
-        ·{' '}
-        <a
-          href="https://munisanmiguel.gob.pe/municipalidad-de-san-miguel/mas-seguro/"
-          target="_blank"
-          rel="noreferrer"
-          className="underline"
-        >
-          Fuente de San Miguel
-        </a>
-      </p>
+      <a
+        href="https://www.gob.pe/547-telefonos-de-emergencia"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="emergency-source"
+      >
+        <span className="material-symbols-outlined" aria-hidden="true">
+          open_in_new
+        </span>{' '}
+        Ver teléfonos de emergencia en gob.pe{' '}
+        <span className="ml-auto" aria-hidden="true">
+          ↗
+        </span>
+      </a>
     </section>
   );
 }

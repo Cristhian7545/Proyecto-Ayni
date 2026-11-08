@@ -10,6 +10,7 @@ const Comunidades = lazy(() => import('../views/Comunidades.jsx'));
 const Perfil = lazy(() => import('../views/Perfil.jsx'));
 const PerfilVecino = lazy(() => import('../views/PerfilVecino.jsx'));
 const Mensajes = lazy(() => import('../views/Mensajes.jsx'));
+const Comunidad = lazy(() => import('../views/Comunidad.jsx'));
 const Acceso = lazy(() => import('../views/Acceso.jsx'));
 const Administracion = lazy(() => import('../views/Administracion.jsx'));
 const Recuperar = lazy(() => import('../views/Recuperar.jsx'));
@@ -19,13 +20,15 @@ export default function AppRoutes() {
     window.scrollTo(0, 0);
     document.title =
       'Ayni · ' +
-      ((pathname === '/administracion'
-        ? 'Administración'
-        : pathname === '/recuperar'
-          ? 'Recuperar acceso'
-          : pathname === '/acceso'
-            ? 'Acceso de usuario'
-            : screenRoutes.find((route) => route.path === pathname)?.title) ||
+      ((pathname.startsWith('/comunidades/')
+        ? 'Muro de comunidad'
+        : pathname === '/administracion'
+          ? 'Administración'
+          : pathname === '/recuperar'
+            ? 'Recuperar acceso'
+            : pathname === '/acceso'
+              ? 'Acceso de usuario'
+              : screenRoutes.find((route) => route.path === pathname)?.title) ||
         'Inicio');
   }, [pathname]);
   return (
@@ -43,6 +46,7 @@ export default function AppRoutes() {
           element={<Emprendimientos />}
         />
         <Route path="/eventos-del-barrio" element={<Eventos />} />
+        <Route path="/comunidades/:communityId" element={<Comunidad />} />
         <Route path="/comunidades" element={<Comunidades />} />
         <Route path="/mi-perfil" element={<Perfil />} />
         <Route path="/perfil-de-vecino" element={<PerfilVecino />} />

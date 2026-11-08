@@ -46,3 +46,12 @@ if (!process.exitCode) {
   );
   if (result.status) process.exitCode = result.status;
 }
+
+if (!process.exitCode) {
+  const result = spawnSync(
+    process.execPath,
+    [path.join(root, 'scripts/migrate-community.js')],
+    { stdio: 'inherit' },
+  );
+  if (result.status) process.exitCode = result.status;
+}

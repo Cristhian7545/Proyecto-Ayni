@@ -1,3 +1,4 @@
+import { communityAccess } from '../community-access.js';
 import { containsAbuse } from '../policies.js';
 import { rateLimit } from 'express-rate-limit';
 import { Router } from 'express';
@@ -37,11 +38,13 @@ export function messageRoutes(db, auth) {
       if (!users.length) fail(404, 'Vecino no encontrado.');
       if (input.postId) {
         const [rows] = await conn.execute(
-          'SELECT id FROM publicaciones WHERE id=? AND moderated_at IS NULL AND (author_id=? OR author_id=?)',
+          'SELECT id,community_id FROM publicaciones WHERE id=? AND moderated_at IS NULL AND (author_id=? OR author_id=?)',
           [input.postId, req.user.id, input.neighborId],
         );
         if (!rows.length)
           fail(400, 'La publicación no pertenece a los participantes.');
+        if (rows[0].community_id)
+          await communityAccess(conn, rows[0].community_id, req.user);
       }
       const [a, b] = [req.user.id, input.neighborId].sort();
       const newId = randomUUID();

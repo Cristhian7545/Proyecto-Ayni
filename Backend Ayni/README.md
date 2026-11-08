@@ -155,3 +155,8 @@ El rol `admin` se asigna mediante el comando local `npm run admin:create`, que t
 | POST /api/admin/alerts/:uuid/send | Confirmación expresa del envío; admin |
 
 El registro exige celular peruano y contraseña de diez caracteres con mayúscula, minúscula, número y carácter especial. `smsOptIn` es falso por defecto. El chat valida insultos en el servidor y limita frecuencia; la lista inicial no cubre todas las formas de abuso. Los tests nuevos de envío usan proveedores simulados y no requieren claves externas.
+
+
+## Muros, códigos y administración de cuentas
+
+Ver [guía actual](../ACTUALIZACION-COMUNIDADES.md). Migración: `npm run db:migrate:community`. API nueva: GET `/api/communities/:id`, listados de posts con `community`, creación con `communityId` y hasta seis `mediaIds`; fotos protegidas en `/api/posts/:id/media/:mediaId`; comunidades del perfil en `/api/users/me/communities` y `/api/users/:id/communities`. CRUD admin en `/api/admin/users` y `/api/admin/users/:id`. Recuperación: POST `/api/auth/forgot-password` → `/api/auth/verify-code` → `/api/auth/reset-password`. No registrar códigos, tokens o credenciales SMTP en logs.

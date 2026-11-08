@@ -1,3 +1,4 @@
+import AdminUsers from '../components/AdminUsers.jsx';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../models/api.js';
@@ -86,6 +87,7 @@ export default function Administracion() {
               {error}
             </p>
           )}
+          <AdminUsers />
           <section className="admin-section">
             <h2 className="text-headline-md text-primary">
               Comunidades pendientes ({summary.pending || 0})

@@ -1,3 +1,4 @@
+import { communityAccess } from '../community-access.js';
 import { Router } from 'express';
 import { z } from 'zod';
 import { id, text, paging, communitySchema } from '../validation.js';
@@ -44,6 +45,21 @@ export function communityRoutes(db, auth, optionalAuth) {
       "SELECT * FROM comunidades WHERE status='pending' ORDER BY id LIMIT 50",
     );
     res.json({ communities: rows });
+  });
+  router.get('/:id', async (req, res) => {
+    const communityId = id.parse(req.params.id);
+    const [rows] = await db.execute(
+      "SELECT c.*,EXISTS(SELECT 1 FROM miembros_comunidad WHERE community_id=c.id AND user_id=?) AS joined,(SELECT COUNT(*) FROM miembros_comunidad WHERE community_id=c.id) AS members FROM comunidades c WHERE c.id=? AND c.status='approved'",
+      [req.user?.id || null, communityId],
+    );
+    if (!rows.length) fail(404, 'Comunidad no disponible.');
+    res.json({
+      community: {
+        ...rows[0],
+        joined: !!Number(rows[0].joined),
+        members: Number(rows[0].members),
+      },
+    });
   });
   router.post('/', auth, async (req, res) => {
     const v = communitySchema.parse(req.body);

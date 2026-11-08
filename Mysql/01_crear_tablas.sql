@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
  avatar_url VARCHAR(255) NULL,
  phone VARCHAR(16) NULL,
  sms_opt_in BOOLEAN NOT NULL DEFAULT FALSE,
+ deleted_at DATETIME NULL,
  role ENUM('neighbor','moderator','admin') NOT NULL DEFAULT 'neighbor',
  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -28,6 +29,18 @@ CREATE TABLE IF NOT EXISTS sesiones (
  FOREIGN KEY(user_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS comunidades (
+ id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+ creator_id CHAR(36) NOT NULL,
+ name VARCHAR(160) NOT NULL,
+ category VARCHAR(80) NOT NULL,
+ district VARCHAR(120) NOT NULL,
+ description TEXT NOT NULL,
+ status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+ created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(creator_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS publicaciones (
  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
  author_id CHAR(36) NOT NULL,
@@ -37,6 +50,7 @@ CREATE TABLE IF NOT EXISTS publicaciones (
  description TEXT NOT NULL,
  district VARCHAR(120) NOT NULL,
  neighborhood VARCHAR(160) NOT NULL,
+ community_id BIGINT UNSIGNED NULL,
  status ENUM('active','completed','archived') NOT NULL DEFAULT 'active',
  pinned BOOLEAN NOT NULL DEFAULT FALSE,
  resolved BOOLEAN NOT NULL DEFAULT FALSE,
@@ -46,7 +60,8 @@ CREATE TABLE IF NOT EXISTS publicaciones (
  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
  INDEX idx_posts_feed(module,status,created_at),
  INDEX idx_posts_author(author_id,status),
- FOREIGN KEY(author_id) REFERENCES usuarios(id) ON DELETE CASCADE
+ FOREIGN KEY(author_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+ FOREIGN KEY(community_id) REFERENCES comunidades(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS detalles_trueque (
@@ -142,17 +157,7 @@ CREATE TABLE IF NOT EXISTS intereses_eventos (
  FOREIGN KEY(user_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS comunidades (
- id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
- creator_id CHAR(36) NOT NULL,
- name VARCHAR(160) NOT NULL,
- category VARCHAR(80) NOT NULL,
- district VARCHAR(120) NOT NULL,
- description TEXT NOT NULL,
- status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
- created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
- FOREIGN KEY(creator_id) REFERENCES usuarios(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+
 
 CREATE TABLE IF NOT EXISTS miembros_comunidad (
  community_id BIGINT UNSIGNED NOT NULL,
@@ -249,5 +254,14 @@ CREATE TABLE IF NOT EXISTS destinatarios_alerta (
  status VARCHAR(32) NOT NULL DEFAULT 'pending', provider_id VARCHAR(80) NULL,
  UNIQUE KEY uq_alerta_usuario(alert_id,user_id),
  FOREIGN KEY(alert_id) REFERENCES alertas_sms(id) ON DELETE CASCADE,
+ FOREIGN KEY(user_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS codigos_recuperacion (
+ user_id CHAR(36) PRIMARY KEY,
+ code_hash CHAR(64) NOT NULL,
+ expires_at DATETIME NOT NULL,
+ attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+ created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
  FOREIGN KEY(user_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;

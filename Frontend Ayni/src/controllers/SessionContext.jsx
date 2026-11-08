@@ -28,6 +28,11 @@ export function SessionProvider({ children }) {
     setUser(normalize(result.user));
     return result.user;
   }
+  async function refreshSession() {
+    const result = await api('/auth/me');
+    setUser(normalize(result.user));
+    return result.user;
+  }
   async function logout() {
     await api('/auth/logout', { method: 'POST' });
     setUser(null);
@@ -51,7 +56,14 @@ export function SessionProvider({ children }) {
   }
   return (
     <SessionContext.Provider
-      value={{ user, loading, authenticate, logout, updateProfile }}
+      value={{
+        user,
+        loading,
+        authenticate,
+        logout,
+        updateProfile,
+        refreshSession,
+      }}
     >
       {children}
     </SessionContext.Provider>

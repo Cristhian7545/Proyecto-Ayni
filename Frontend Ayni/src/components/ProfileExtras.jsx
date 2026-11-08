@@ -1,85 +1,111 @@
+import Modal from './Modal.jsx';
 import LocationFields from './LocationFields.jsx';
 import { useFeedback } from '../controllers/FeedbackContext.jsx';
 import LiveReviews from './LiveReviews.jsx';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import PhotoField from './PhotoField.jsx';
 import { useSession } from '../controllers/SessionContext.jsx';
-export function EditProfile() {
+export function EditProfile({ compact = false }) {
   const { user, updateProfile } = useSession();
+  const [open, setOpen] = useState(false),
+    close = useCallback(() => setOpen(false), []);
   const [notice, setNotice] = useState(''),
     [busy, setBusy] = useState(false);
-  return (
+  const form = (
+    <form
+      key={String(open)}
+      className="ayni-form mt-4"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        if (!user) {
+          setNotice('Inicia sesión para editar tu perfil.');
+          return;
+        }
+        setBusy(true);
+        try {
+          await updateProfile(new FormData(event.currentTarget));
+          setNotice('Perfil actualizado en Ayni.');
+        } catch (error) {
+          setNotice(error.message);
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <h3 className="font-semibold">Datos del perfil</h3>
+      <label>
+        Nombre visible
+        <input
+          name="name"
+          defaultValue={user?.name || ''}
+          minLength={2}
+          maxLength={120}
+          required
+        />
+      </label>
+      <LocationFields
+        district={user?.district || ''}
+        neighborhood={user?.neighborhood || ''}
+      />
+      <label>
+        Acerca de mí
+        <textarea
+          name="bio"
+          defaultValue={user?.bio || ''}
+          maxLength={1000}
+          rows={3}
+        />
+      </label>
+      <label>
+        Número de celular
+        <input
+          name="phone"
+          type="tel"
+          defaultValue={user?.phone || ''}
+          placeholder="912 345 678"
+          maxLength={18}
+        />
+      </label>
+      <label className="consent-option">
+        <input
+          name="smsOptIn"
+          type="checkbox"
+          defaultChecked={!!user?.smsOptIn}
+        />
+        Acepto alertas SMS de emergencias graves en mi distrito.
+      </label>
+      <PhotoField label="Foto de perfil" />
+      <button type="submit" disabled={busy} className="ayni-primary">
+        {busy ? 'Guardando…' : 'Guardar cambios'}
+      </button>
+      {notice && <p role="status">{notice}</p>}
+    </form>
+  );
+  return compact ? (
+    <>
+      <button
+        type="button"
+        className="profile-setting-button"
+        onClick={() => setOpen(true)}
+      >
+        <span className="material-symbols-outlined" aria-hidden="true">
+          edit
+        </span>
+        Editar perfil
+        <span className="ml-auto" aria-hidden="true">
+          ↗
+        </span>
+      </button>
+      <Modal open={open} onClose={close} title="Editar mi perfil">
+        {form}
+      </Modal>
+    </>
+  ) : (
     <details className="ayni-profile-editor">
       <summary className="ayni-secondary cursor-pointer">
         Editar perfil ⌄
       </summary>
-      <form
-        className="ayni-form mt-4"
-        onSubmit={async (event) => {
-          event.preventDefault();
-          if (!user) {
-            setNotice('Inicia sesión para editar tu perfil.');
-            return;
-          }
-          setBusy(true);
-          try {
-            await updateProfile(new FormData(event.currentTarget));
-            setNotice('Perfil actualizado en Ayni.');
-          } catch (error) {
-            setNotice(error.message);
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        <h3 className="font-semibold">Datos del perfil</h3>
-        <label>
-          Nombre visible
-          <input
-            name="name"
-            defaultValue={user?.name || ''}
-            minLength={2}
-            maxLength={120}
-            required
-          />
-        </label>
-        <LocationFields
-          district={user?.district || ''}
-          neighborhood={user?.neighborhood || ''}
-        />
-        <label>
-          Acerca de mí
-          <textarea
-            name="bio"
-            defaultValue={user?.bio || ''}
-            maxLength={1000}
-            rows={3}
-          />
-        </label>
-        <label>
-          Número de celular
-          <input
-            name="phone"
-            type="tel"
-            defaultValue={user?.phone || ''}
-            placeholder="912 345 678"
-            maxLength={18}
-          />
-        </label>
-        <label className="consent-option">
-          <input
-            name="smsOptIn"
-            type="checkbox"
-            defaultChecked={!!user?.smsOptIn}
-          />
-          Acepto alertas SMS de emergencias graves en mi distrito.
-        </label>
-        <PhotoField label="Foto de perfil" />
-        <button type="submit" disabled={busy} className="ayni-primary">
-          {busy ? 'Guardando…' : 'Guardar cambios'}
-        </button>
-        {notice && <p role="status">{notice}</p>}
-      </form>
+      {form}
     </details>
   );
 }

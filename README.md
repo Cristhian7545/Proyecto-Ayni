@@ -24,11 +24,11 @@ npm run dev
 
 Abre http://127.0.0.1:5173 . MySQL debe estar encendido; las credenciales siguen en Backend Ayni/.env. No se cambiaron ni se imprimieron.
 
-## Base de datos 
+## Base de datos
 
-La base sigue llamándose **ayni**, con **25 tablas en español**. Se renombraron las existentes conservando sus filas, claves y relaciones. Antes de migrar se guardó un respaldo local de estructura y datos en Mysql/respaldos. Es privado: no lo publiques ni lo agregues a Git.
+La base sigue llamándose **ayni**, con **26 tablas en español**. Se renombraron las existentes conservando sus filas, claves y relaciones. Antes de migrar se guardó un respaldo local de estructura y datos en Mysql/respaldos. Es privado: no lo publiques ni lo agregues a Git.
 
-- Mysql/01_crear_tablas.sql: instalación nueva, 25 tablas.
+- Mysql/01_crear_tablas.sql: instalación nueva, 26 tablas.
 - Mysql/02_renombrar_tablas.sql: referencia del cambio inglés → español (ya aplicado aquí; no repetir manualmente).
 - Mysql/03_mejoras.sql: guardados y catálogos.
 - Mysql/04_catalogos.sql: distritos y barrios iniciales.
@@ -45,7 +45,7 @@ Los nombres de columnas y las rutas HTTP se mantienen compatibles con el contrat
 - Filtros de disponibles/completados/categorías con conteos reales y paginación; no se mezclan tarjetas ficticias con los totales de MySQL.
 - Publicación de apoyo, trueques y emprendimientos, incluyendo foto opcional. Contactar abre una conversación real con su autor.
 - Eventos reales con foto opcional, publicación inmediata, filtros, contadores e interés persistente y visible por color.
-- Comunidades reales con propuesta, aprobación por moderador o administrador, categorías, conteos y membresía.
+- Comunidades reales con propuesta, aprobación por moderador o administrador, categorías, conteos, membresía y muro privado para miembros.
 - Mensajería real entre participantes, actualizada cada 8 segundos. Las consultas privadas siguen protegidas en el backend.
 - Confirmaciones de creación en modal, estados de clic y respeto de la preferencia de reducir animaciones.
 
@@ -81,3 +81,12 @@ La recuperación de contraseña y las alertas están implementadas; falta comple
 - `Mysql/05_administracion.sql`: cuatro tablas nuevas en español.
 - `npm run db:migrate:admin`: migración con respaldo, sin reiniciar datos.
 - `npm run admin:create`: genera/reemplaza la contraseña de `ADMIN_EMAIL`; no es un comando de arranque.
+
+
+## Actualización de comunidades, perfil, códigos y cuentas
+
+Las comunidades tienen su propio muro con navegación de regreso, publicaciones con varias fotos, me gusta, comentarios y guardados. Mi perfil muestra las comunidades suscritas y sus controles de cuenta en una columna a la derecha. Los contactos de emergencia se rediseñaron y enlazan al listado oficial de gob.pe.
+
+La recuperación ahora utiliza un código de seis dígitos por correo y confirmación antes de cambiar la contraseña. El administrador puede buscar, crear, editar, eliminar cuentas y asignar permisos. Consulta [ACTUALIZACION-COMUNIDADES.md](./ACTUALIZACION-COMUNIDADES.md) para los detalles actuales; reemplaza las instrucciones anteriores sobre enlaces de recuperación.
+
+En este equipo ya se aplicó la migración con respaldo. En otras instalaciones existentes: `npm run db:migrate:community` en Backend Ayni. Las instalaciones nuevas usan `npm run db:init`. Reinicia ambos servidores para cargar la actualización.

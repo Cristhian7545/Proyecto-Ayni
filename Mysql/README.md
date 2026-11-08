@@ -11,3 +11,6 @@ Para instalar desde cero: ejecuta npm run db:init dentro de Backend Ayni (usa .e
 Las columnas y las rutas de la API conservan sus nombres anteriores por compatibilidad. Los nuevos registros validan distritos, días y horarios en el backend. El respaldo contiene datos privados y hashes de contraseña: conservar localmente, no compartir ni subir a Git. .gitignore excluye la carpeta respaldos.
 
 05_administracion.sql contiene las cuatro tablas nuevas; el migrador de administración agrega también las columnas necesarias a las tablas existentes. 01_crear_tablas.sql incluye el esquema completo de 25 tablas. El respaldo de esta actualización se conserva en respaldos/admin-*.json.
+
+
+Actualización: 26 tablas. Se agregó `codigos_recuperacion`, `usuarios.deleted_at` y `publicaciones.community_id` con FK a comunidades. `npm run db:migrate:community` realiza respaldo, aplica los cambios y genera la clave privada local para los códigos. `db:init` incluye esa migración. 01_crear_tablas.sql contiene el esquema completo. La migración de este equipo ya está aplicada.

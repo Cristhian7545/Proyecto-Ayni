@@ -1,9 +1,11 @@
+import { useSearchParams } from 'react-router-dom';
+import NeighborProfile from '../components/NeighborProfile.jsx';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import useStitchController from '../controllers/useStitchController.js';
 import initialize from '../controllers/PerfilVecinoController.js';
 import Sidebar from '../components/Sidebar.jsx';
 import PublicacionCard from '../components/PublicacionCard.jsx';
-export default function PerfilVecino() {
+function StitchPerfilVecino() {
   const controller = useStitchController(initialize);
   const navigate = useNavigate();
   return (
@@ -901,4 +903,10 @@ export default function PerfilVecino() {
       </main>
     </div>
   );
+}
+
+export default function PerfilVecino() {
+  const [search] = useSearchParams();
+  const userId = search.get('usuario');
+  return userId ? <NeighborProfile userId={userId} /> : <StitchPerfilVecino />;
 }

@@ -67,11 +67,23 @@ export const postSchema = z
     end: time.optional(),
     mode: z.enum(['Presencial', 'Virtual', 'Mixta']).default('Presencial'),
     mediaId: uuid.optional(),
+    mediaIds: z.array(uuid).max(6).optional(),
+    communityId: id.optional(),
   })
   .strict()
   .superRefine((p, ctx) => {
     const add = (path, message) =>
       ctx.addIssue({ code: 'custom', path: [path], message });
+    if (
+      new Set([...(p.mediaIds || []), ...(p.mediaId ? [p.mediaId] : [])]).size >
+      6
+    )
+      add('mediaIds', 'Puedes adjuntar hasta seis fotos.');
+    if (p.communityId && p.module !== 'aviso')
+      add(
+        'communityId',
+        'El muro de comunidad solo admite publicaciones comunitarias.',
+      );
     if (p.module === 'trueque' && (!p.offer || !p.request))
       add('offer', 'Indica qué ofreces y qué buscas.');
     if (p.module === 'emprendimiento' && p.price === undefined)

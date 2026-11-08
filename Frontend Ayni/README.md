@@ -28,3 +28,8 @@ Consulta [ADMINISTRACION-Y-CORREO.md](../ADMINISTRACION-Y-CORREO.md) para config
 - `src/styles/ayni.css`: filtros compartidos y avatares de 40 × 40 con recorte uniforme. En móvil los filtros tienen hasta dos filas y desplazamiento horizontal cuando hace falta.
 
 La configuración de SMTP y Twilio pertenece exclusivamente al backend. Reinicia los dos servidores después de actualizar.
+
+
+## Muros de comunidad y perfil actualizado
+
+`src/views/Comunidad.jsx` atiende `/comunidades/:communityId` y reutiliza `LivePublications`. `CommunityPostForm`, `PostGallery`, `UserCommunities` y `AdminUsers` contienen los controles nuevos. `Perfil.jsx` utiliza controles compactos con modales en una columna lateral; las comunidades reemplazan las recomendaciones. `Recuperar.jsx` muestra correo, confirmación de código y confirmación de contraseña. Ver [guía actual](../ACTUALIZACION-COMUNIDADES.md).

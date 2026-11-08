@@ -21,7 +21,7 @@ export function createAuth(db) {
   const loadUser = async (token) => {
     if (typeof token !== 'string' || !token || token.length > 100) return null;
     const [rows] = await db.execute(
-      'SELECT u.* FROM sesiones s JOIN usuarios u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>UTC_TIMESTAMP()',
+      'SELECT u.* FROM sesiones s JOIN usuarios u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>UTC_TIMESTAMP() AND u.deleted_at IS NULL',
       [hashToken(token)],
     );
     return rows[0] || null;
@@ -93,9 +93,10 @@ export function createAuth(db) {
   });
   router.post('/login', limiter, async (req, res) => {
     const input = loginSchema.parse(req.body);
-    const [rows] = await db.execute('SELECT * FROM usuarios WHERE email=?', [
-      input.email,
-    ]);
+    const [rows] = await db.execute(
+      'SELECT * FROM usuarios WHERE email=? AND deleted_at IS NULL',
+      [input.email],
+    );
     const stored =
       rows[0]?.password_hash ||
       'scrypt:00000000000000000000000000000000:' + '00'.repeat(64);

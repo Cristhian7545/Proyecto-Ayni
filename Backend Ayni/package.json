@@ -14,7 +14,8 @@
     "test:db": "node --test test/database.integration.js",
     "db:migrate": "node scripts/migrate-es.js",
     "db:migrate:admin": "node scripts/migrate-admin.js",
-    "admin:create": "node scripts/create-admin.js"
+    "admin:create": "node scripts/create-admin.js",
+    "db:migrate:community": "node scripts/migrate-community.js"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",

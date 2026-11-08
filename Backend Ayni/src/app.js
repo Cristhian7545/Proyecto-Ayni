@@ -1,3 +1,5 @@
+import path from 'node:path';
+import { adminUserRoutes } from './routes/admin-users.js';
 import { adminRoutes } from './routes/admin.js';
 import { recoveryRoutes } from './routes/recovery.js';
 import express from 'express';
@@ -60,6 +62,7 @@ export function createApp(db = pool, services = {}) {
   const { router, auth, optionalAuth } = createAuth(db);
   app.use('/api/auth', router);
   app.use('/api/auth', recoveryRoutes(db, auth, services));
+  app.use('/api/admin/users', adminUserRoutes(db, auth));
   app.use('/api/admin', adminRoutes(db, auth, services));
   app.use('/api/users', userRoutes(db, auth));
   app.use('/api/posts', postRoutes(db, auth, optionalAuth));
@@ -70,6 +73,20 @@ export function createApp(db = pool, services = {}) {
   app.use('/api/uploads', uploadRoutes(db, auth));
   app.use(
     '/uploads',
+    async (req, res, next) => {
+      let file;
+      try {
+        file = path.posix.basename(decodeURIComponent(req.path));
+      } catch {
+        return res.status(400).end();
+      }
+      const [rows] = await db.execute(
+        'SELECT p.id FROM archivos_multimedia m JOIN publicaciones p ON p.id=m.post_id WHERE m.url=? AND p.community_id IS NOT NULL LIMIT 1',
+        ['/uploads/' + file],
+      );
+      if (rows.length) return res.status(404).end();
+      next();
+    },
     express.static(config.uploads, {
       dotfiles: 'deny',
       index: false,

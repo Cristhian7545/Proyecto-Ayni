@@ -53,6 +53,7 @@ try {
     'Acceso',
     'Administracion',
     'Recuperar',
+    'Comunidad',
   ]) {
     const { default: View } = await server.ssrLoadModule(
       `/src/views/${view}.jsx`,
@@ -208,6 +209,47 @@ try {
   assert.match(accessSource, /smsOptIn/);
   console.log(
     '✓ Contraseñas, recuperación, moneda, un solo perfil y geolocalización sin selector redundante',
+  );
+  const { default: Emergency } = await server.ssrLoadModule(
+    '/src/components/EmergencyContacts.jsx',
+  );
+  const emergency = render(React.createElement(Emergency));
+  assert.match(emergency, /https:\/\/www.gob.pe\/547-telefonos-de-emergencia/);
+  assert.ok(!emergency.includes('Directorio nacional'));
+  assert.ok(!emergency.includes('Fuente de San Miguel'));
+  for (const number of ['105', '116', '106', '100'])
+    assert.ok(emergency.includes('tel:' + number));
+  const { default: Gallery } = await server.ssrLoadModule(
+    '/src/components/PostGallery.jsx',
+  );
+  const gallery = render(
+    React.createElement(Gallery, {
+      post: {
+        id: '1',
+        title: 'Galería de prueba',
+        images: ['/api/posts/1/media/a', '/api/posts/1/media/b'],
+      },
+    }),
+  );
+  assert.match(gallery, /Ver foto 2/);
+  const profileSource = fs.readFileSync(
+    path.join(root, 'src/views/Perfil.jsx'),
+    'utf8',
+  );
+  assert.match(profileSource, /profile-settings/);
+  assert.match(profileSource, /<EditProfile compact/);
+  assert.match(profileSource, /<PasswordChange compact/);
+  assert.match(profileSource, /<UserCommunities/);
+  assert.ok(!profileSource.includes('<LiveReviews'));
+  const recoverySource = fs.readFileSync(
+    path.join(root, 'src/views/Recuperar.jsx'),
+    'utf8',
+  );
+  assert.match(recoverySource, /verify-code/);
+  assert.match(recoverySource, /one-time-code/);
+  assert.match(recoverySource, /Confirma tu nueva contraseña/);
+  console.log(
+    '✓ Emergencias oficiales, galería, controles de perfil y recuperación por código',
   );
   const inventory = JSON.parse(
     fs.readFileSync(path.join(root, 'docs/inventario-stitch.json')),

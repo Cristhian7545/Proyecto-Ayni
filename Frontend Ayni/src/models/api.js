@@ -1,8 +1,10 @@
 const base = (import.meta.env.VITE_API_BASE || '/api').replace(/\/$/, '');
-export const assetUrl = (url) =>
-  url?.startsWith('/uploads/') && base.startsWith('http')
-    ? new URL(url, base).href
-    : url;
+export const assetUrl = (url) => {
+  if (!url || !base.startsWith('http')) return url;
+  if (url.startsWith('/uploads/')) return new URL(url, base).href;
+  if (url.startsWith('/api/')) return base + url.slice(4);
+  return url;
+};
 export async function api(path, options = {}) {
   let response;
   try {

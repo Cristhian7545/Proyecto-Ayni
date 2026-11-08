@@ -26,7 +26,7 @@ MAIL_FROM=
 
 Usa los valores y credenciales de envío que te entregue tu proveedor SMTP. `MAIL_FROM` debe ser un remitente permitido por ese proveedor. Si la contraseña contiene `#` o espacios, colócala entre comillas en `.env`. `SMTP_SECURE=false` solicita STARTTLS obligatorio; si tu proveedor exige TLS desde la conexión, configura su puerto y `SMTP_SECURE=true`. No se desactiva la validación de certificados. Referencia: [transporte SMTP de Nodemailer](https://nodemailer.com/smtp).
 
-Reinicia el backend. En Acceso → Olvidé mi contraseña, solicita un enlace y ábrelo desde el correo recibido. El enlace vence a los 15 minutos y funciona una vez. Los tokens se almacenan como hashes y viajan en el fragmento del enlace; la API no los devuelve ni los imprime. La respuesta no revela si un correo está registrado. Cambiar o recuperar la contraseña cierra las sesiones de esa cuenta.
+Reinicia el backend. En Acceso → Olvidé mi contraseña, solicita un código y confírmalo en la misma pantalla. Tiene seis dígitos, vence a los diez minutos y permite cinco intentos incorrectos. Tras confirmarlo se emite una autorización temporal de cinco minutos para elegir y confirmar la contraseña. Los códigos se almacenan como HMAC y nunca se devuelven en la solicitud inicial ni se imprimen. La respuesta no revela si un correo está registrado. Cambiar o recuperar la contraseña cierra las sesiones de esa cuenta.
 
 Mientras falten las variables de correo, el formulario informa que el servicio todavía no está configurado. Las pruebas automáticas usan un emisor simulado; la entrega real queda pendiente de configurar y comprobar con tu proveedor.
 
@@ -59,7 +59,7 @@ El chat incluye burbujas, fecha/hora, mensajes sin leer, confirmación de lectur
 
 ## SQL y pruebas
 
-`Mysql/05_administracion.sql` agrega `tokens_recuperacion`, `acciones_admin`, `alertas_sms` y `destinatarios_alerta`. `npm run db:migrate:admin` respalda y agrega las columnas de rol, celular, consentimiento, fijado, moderación, resolución y lectura sin borrar las filas. `01_crear_tablas.sql` contiene el esquema completo de 25 tablas para instalaciones nuevas. `npm run db:init` incluye ambas migraciones y carga los catálogos iniciales.
+`Mysql/05_administracion.sql` agrega `tokens_recuperacion`, `acciones_admin`, `alertas_sms` y `destinatarios_alerta`. `npm run db:migrate:admin` respalda y agrega las columnas de rol, celular, consentimiento, fijado, moderación, resolución y lectura sin borrar las filas. `01_crear_tablas.sql` contiene el esquema completo de 26 tablas para instalaciones nuevas. `npm run db:init` incluye ambas migraciones y carga los catálogos iniciales.
 
 En el backend:
 
@@ -78,3 +78,6 @@ npm run build
 ```
 
 Las pruebas de integración crean y eliminan sus propias cuentas `example.invalid`; las pruebas nuevas de correo y SMS inyectan emisores simulados. No ejecutarlas en una base de producción.
+
+
+La versión actual agrega CRUD de cuentas, códigos y muros por comunidad. Consulta [ACTUALIZACION-COMUNIDADES.md](./ACTUALIZACION-COMUNIDADES.md).

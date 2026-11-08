@@ -193,8 +193,11 @@ export default function Comunidades() {
                   >
                     {group.joined ? '✓ Miembro · Salir' : 'Unirme'}
                   </button>
-                  <Link to="/inicio" className="ayni-secondary">
-                    Ver publicaciones y comentarios
+                  <Link
+                    to={`/comunidades/${group.id}`}
+                    className="ayni-secondary"
+                  >
+                    Entrar al muro →
                   </Link>
                 </div>
               </article>
