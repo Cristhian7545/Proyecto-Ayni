@@ -1,5 +1,11 @@
 import { useEffect, useId, useRef } from 'react';
-export default function Modal({ open, onClose, title, children }) {
+export default function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  closeLabel = 'Cerrar formulario',
+}) {
   const titleId = useId();
   const ref = useRef(null);
   useEffect(() => {
@@ -13,7 +19,7 @@ export default function Modal({ open, onClose, title, children }) {
       if (event.key === 'Tab') {
         const fields = [
           ...ref.current.querySelectorAll(
-            'button,input,select,textarea,a[href]',
+            'button,input,select,textarea,a[href],gmp-place-autocomplete',
           ),
         ].filter((el) => !el.disabled && el.getClientRects().length);
         const first = fields[0],
@@ -55,7 +61,7 @@ export default function Modal({ open, onClose, title, children }) {
           </h2>
           <button
             type="button"
-            aria-label="Cerrar formulario"
+            aria-label={closeLabel}
             onClick={onClose}
             className="ayni-icon"
           >

@@ -458,9 +458,9 @@ export default function LivePublications({
             aria-label="Estado de publicaciones"
           >
             {[
-              ['active', 'Solo disponibles', data.counts.active],
+              ['active', 'Disponibles', data.counts.active],
               ['completed', 'Completados', data.counts.completed],
-              ['all', 'Todos', data.counts.total],
+              ['all', 'Cualquier estado', data.counts.total],
             ].map(([value, label, count]) => (
               <button
                 key={value}
@@ -487,7 +487,7 @@ export default function LivePublications({
               aria-pressed={!category}
               onClick={() => choose(setCategory)('')}
             >
-              Todas ({totalCategories})
+              Todas las categorías ({totalCategories})
             </button>
             {categories.map((c) => (
               <button

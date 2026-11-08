@@ -76,3 +76,20 @@ Guía actual: [ACTUALIZACION-COMUNIDADES.md](./ACTUALIZACION-COMUNIDADES.md). Re
 - Migración aplicada con respaldo previo, conservando las 26 tablas y los datos. No se hicieron commits ni subidas a GitHub en esta solicitud.
 
 Configuración y prueba manual: [OFFLINE-FIRST.md](./OFFLINE-FIRST.md).
+
+
+## Ubicación desplegable y textos de la guía
+
+- Formularios existentes: mapa desplegable, sugerencias de dirección en Perú, selección con toque o marcador y botón de ubicación actual. Dirección y coordenadas se guardan mediante el flujo ya existente.
+- Se evita publicar al pulsar Enter en una sugerencia, se sincroniza el marcador al cambiar de punto/GPS y se ignoran respuestas atrasadas. La dirección manual sigue disponible si falla Google.
+- Guía de ocho pasos con resumen corto, tres instrucciones numeradas, ejemplos, texto más legible y foco al cambiar de paso.
+- No se agregaron imágenes a la guía. No se modificó el backend, MySQL ni el .env. No se hicieron commits ni subidas a GitHub en esta actualización.
+
+Instrucciones: [UBICACION-Y-GUIA.md](./UBICACION-Y-GUIA.md).
+
+
+## Filtros y preparación para compartir el proyecto
+
+- Publicaciones: el estado combinado se llama Cualquier estado; la categoría sin selección se llama Todas las categorías. Se evita mostrar Todos y Todas como opciones ambiguas consecutivas.
+- Eventos y comunidades usan el mismo nombre Todas las categorías para restablecer ese filtro. Se conservan los conteos y el filtrado existentes.
+- Las guías de instalación, esquema completo, datos demo y documentación de mapa se conservan en sus rutas originales. La versión compartida incluye los .env con credenciales vacías y conserva los archivos locales completos; no se publican contraseñas ni claves de proveedores.

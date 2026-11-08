@@ -1,19 +1,28 @@
-# Esquema de Ayni en español
+# Base de datos Ayni
 
-La base ayni conserva los datos existentes. Sus tablas son:
+Para instalar desde cero en MySQL Workbench abre **00_instalacion_completa.sql** y ejecuta todo su contenido mediante Execute (All or Selection). Es autosuficiente: crea la base ayni, las 26 tablas, relaciones e índices, 43 distritos y 7 barrios iniciales. No necesita ejecutar otros SQL ni usar SOURCE.
 
-usuarios, sesiones, publicaciones, detalles_trueque, detalles_apoyo, detalles_emprendimiento, disponibilidad, archivos_multimedia, me_gusta_publicaciones, comentarios, eventos, intereses_eventos, comunidades, miembros_comunidad, conversaciones, publicaciones_conversacion, mensajes, resenas, guardados_publicaciones, distritos, barrios, tokens_recuperacion, acciones_admin, alertas_sms, destinatarios_alerta.
+Guía paso a paso: [INSTALACION-Y-COMANDOS.md](../INSTALACION-Y-COMANDOS.md). Incluye la preparación de los .env y la clave privada de recuperación, que se generan en cada equipo y no pertenecen a la base compartida.
 
-Para instalar desde cero: ejecuta npm run db:init dentro de Backend Ayni (usa .env). Para una instalación antigua: npm run db:migrate y luego npm run db:migrate:admin. El migrador verifica nombres, realiza respaldo local en Mysql/respaldos y renombra las tablas mediante una sola sentencia RENAME TABLE. Si encuentra nombres en ambos idiomas, se detiene para no ocultar ni mezclar datos.
+El archivo completo no incluye cuentas ni publicaciones privadas. No borra la base ni las tablas. Repetirlo sobre el esquema actual no duplica el catálogo, pero no actualiza columnas antiguas: para una instalación existente usa npm run db:init en Backend Ayni. Los migradores comprueban y respaldan antes de cambiar la estructura.
 
-01_crear_tablas.sql contiene el esquema completo; 04_catalogos.sql carga los catálogos cuando se trabaja manualmente en Workbench. La migración de este equipo ya se aplicó. No vuelvas a ejecutar 02_renombrar_tablas.sql manualmente sobre tablas ya renombradas.
+## Archivos
 
-Las columnas y las rutas de la API conservan sus nombres anteriores por compatibilidad. Los nuevos registros validan distritos, días y horarios en el backend. El respaldo contiene datos privados y hashes de contraseña: conservar localmente, no compartir ni subir a Git. .gitignore excluye la carpeta respaldos.
+| Archivo | Uso |
+|---|---|
+| 00_instalacion_completa.sql | Instalación nueva en una ejecución: esquema y catálogos. |
+| 01_crear_tablas.sql | Fuente del esquema actual utilizada por db:init. |
+| 04_catalogos.sql | Fuente del catálogo utilizada en la instalación manual completa. |
+| 02_renombrar_tablas.sql | Referencia de migración; no ejecutar sobre tablas ya renombradas. |
+| 03_mejoras.sql, 05_administracion.sql, 06_comunidades_y_codigos.sql | Recursos de los migradores; el esquema completo ya los integra. |
+| catalogo_lima.json | Catálogo inicial público de distritos/barrios. |
+| respaldos/ | Copias privadas de cada instalación, excluidas de Git. |
 
-05_administracion.sql contiene las cuatro tablas nuevas; el migrador de administración agrega también las columnas necesarias a las tablas existentes. 01_crear_tablas.sql incluye el esquema completo de 25 tablas. El respaldo de esta actualización se conserva en respaldos/admin-*.json.
+Las 26 tablas tienen nombres en español. Las columnas y rutas de la API mantienen sus nombres actuales por compatibilidad. El esquema incluye códigos de recuperación, administración, comunidades, chat, guardados, ubicación y claves únicas de sincronización offline. Las credenciales MySQL van en Backend Ayni/.env; SMTP/Twilio se configuran allí y Maps en el .env del frontend.
+
+Si cambia el esquema o catálogo, actualiza también el SQL completo con el contenido de 01_crear_tablas.sql y 04_catalogos.sql, manteniendo su orden. El instalador único es para MySQL 8.0.16 o posterior y no se ha preparado para MariaDB.
 
 
-Actualización: 26 tablas. Se agregó `codigos_recuperacion`, `usuarios.deleted_at` y `publicaciones.community_id` con FK a comunidades. `npm run db:migrate:community` realiza respaldo, aplica los cambios y genera la clave privada local para los códigos. `db:init` incluye esa migración. 01_crear_tablas.sql contiene el esquema completo. La migración de este equipo ya está aplicada.
+## Datos ficticios opcionales
 
-
-Offline-First: se mantienen 26 tablas; se agregan `publicaciones.client_request_id`, `sync_hash`, `address`, `latitude`, `longitude`; `archivos_multimedia.client_request_id` y `eventos.district`. Los índices únicos por autor/propietario y solicitud evitan duplicados. `01_crear_tablas.sql` contiene el esquema completo. En instalaciones existentes usa `npm run db:migrate:offline`; el script comprueba columnas/índices y respalda antes de aplicar.
+Después de instalar el esquema, puedes ejecutar **07_datos_ejemplo_distritos.sql** completo en Workbench. Agrega cinco registros por sección para Puente Piedra, Los Olivos y San Martín de Porres, con perfiles, comunidades, guardados y conversaciones de demostración. Instrucciones y cuentas: [DATOS-DE-EJEMPLO.md](./DATOS-DE-EJEMPLO.md). Este archivo es opcional y no se incluye en el instalador vacío 00.

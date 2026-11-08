@@ -131,7 +131,8 @@ export default function Comunidades() {
                 setOffset(0);
               }}
             >
-              Todas ({Object.values(data.counts).reduce((s, n) => s + n, 0)})
+              Todas las categorías (
+              {Object.values(data.counts).reduce((s, n) => s + Number(n), 0)})
             </button>
             {Object.entries(data.counts).map(([name, n]) => (
               <button

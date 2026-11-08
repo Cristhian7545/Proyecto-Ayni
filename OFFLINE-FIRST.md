@@ -1,6 +1,6 @@
 # Ayni: modo offline, distrito, búsqueda y ubicación
 
-Esta actualización es local. No se hicieron commits ni subidas a GitHub.
+Esta versión incluye archivos .env con los puertos y opciones de conexión preparados y las credenciales de MySQL y proveedores vacías. Cada instalación debe completar sus datos locales. Los .env.example también se conservan. Los archivos locales del propietario mantienen sus claves y no se sobrescriben para preparar la subida.
 
 ## Qué puedes hacer sin conexión
 
@@ -79,7 +79,7 @@ Mis publicaciones, Guardados, los perfiles visitados y los muros de comunidades 
 
 ## Ubicación opcional
 
-En los formularios activa Dirección y punto de encuentro para incluir una referencia, usar GPS o pegar coordenadas/enlace completo de Google Maps y confirmar el punto. Desactivado, no se envía ubicación. Un enlace corto de Maps debe abrirse primero para copiar sus coordenadas o el enlace completo. La dirección y el acceso a Maps aparecen sobre los botones de acciones de la publicación.
+En los formularios marca «Añadir una ubicación a esta publicación». Abre «Buscar dirección o elegir en el mapa» para escribir una dirección, elegir una sugerencia o marcar y mover un punto. También puedes usar tu ubicación actual, escribir una referencia sin mapa o abrir «Otras formas de indicar el lugar» para pegar coordenadas o un enlace completo de Google Maps. Desactivado, no se envía ubicación. Un enlace corto de Maps debe abrirse primero para copiar sus coordenadas o el enlace completo. La dirección y el acceso a Maps aparecen sobre los botones de acciones de la publicación.
 
 El GPS solicita permiso solo al pulsar el botón. Las coordenadas elegidas se conservan con el borrador offline y se envían al publicar. No se hace seguimiento continuo ni se sobrescribe el distrito registrado.
 
@@ -90,13 +90,13 @@ VITE_GOOGLE_MAPS_API_KEY=
 VITE_GOOGLE_MAPS_MAP_ID=
 ```
 
-Debes tener Maps JavaScript API habilitada y configurar las restricciones y condiciones de tu proyecto de Google Cloud. El mapa usa Advanced Markers y, si no se indica map ID, el ID de demostración para desarrollo. Sin clave siguen disponibles GPS, dirección y coordenadas. Referencias: [Maps URLs](https://developers.google.com/maps/documentation/urls/get-started), [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/overview).
+Debes tener Maps JavaScript API y Places API (New) habilitadas, con facturación y restricciones de sitio web en tu proyecto de Google Cloud. En la restricción de API de la clave permite ambas. Para desarrollo autoriza http://127.0.0.1:5173/* y http://localhost:5173/*; para probar la PWA agrega los mismos orígenes en el puerto 4173. El mapa usa Advanced Markers y, si no se indica map ID, el ID de demostración para desarrollo. Sin clave siguen disponibles GPS, dirección y coordenadas. Referencias: [Maps URLs](https://developers.google.com/maps/documentation/urls/get-started), [Maps JavaScript API](https://developers.google.com/maps/documentation/javascript/overview).
 
 ## Buscador, perfiles y guía
 
 El buscador superior abre `/buscar?q=...` con pestañas de publicaciones, eventos, comunidades y vecinos. Requiere dos caracteres y respeta el distrito del perfil. Los resultados abren la publicación, evento, comunidad o perfil reales. En las tarjetas, la foto y el nombre del autor llevan a su perfil; allí también aparecen sus publicaciones públicas.
 
-La guía de Inicio tiene ocho pasos con navegación Atrás/Siguiente y accesos a registro, catálogos, publicación, ubicación, comunidades, interacciones, modo offline y cuenta.
+La guía de Inicio tiene ocho pasos con navegación Anterior/Siguiente. Cada paso usa un resumen corto, tres instrucciones numeradas y un consejo. Explica registro, búsqueda, publicaciones, ubicación, comunidades, interacciones, modo sin conexión y cuenta. Se aumentó la legibilidad y el foco del teclado se mueve al título de cada paso.
 
 ## Migración y estructura
 

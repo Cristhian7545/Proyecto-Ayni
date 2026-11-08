@@ -64,3 +64,47 @@ Fecha: 8 de noviembre de 2026.
 - No hubo navegador interactivo disponible. La instalación PWA, recarga offline, revisión visual y selector integrado de Google Maps requieren la prueba manual descrita en la guía. La compilación y pruebas automatizadas no equivalen a esa revisión. No se utilizó una clave real de Google Maps.
 
 Guía vigente: [OFFLINE-FIRST.md](./OFFLINE-FIRST.md). Reinicia los servidores. Para probar el Service Worker, usa npm run build y npm run preview; está desactivado en desarrollo.
+
+
+## Verificación: mapa desplegable, direcciones y guía accesible
+
+Fecha: 8 de noviembre de 2026.
+
+- npm run build correcto: 105 módulos; PWA con 70 entradas precargadas y Service Worker generado.
+- Frontend: 21 pruebas aprobadas, cero fallos u omisiones (14 offline y 7 de ubicación/guía, incluyendo la prueba contenedora). La suite DOM se volvió a ejecutar tras fijar jsdom 26 por compatibilidad con Node: 7 aprobadas.
+- npm run verify: quince vistas renderizadas y controles existentes comprobados.
+- Interacciones DOM probadas: desplegable, dirección y coordenadas, Enter sin publicar, exclusión de ubicación opcional, selección en mapa, arrastre, GPS, retirada de marcador, respuesta atrasada, error de sugerencias, reintento de carga y guía con foco, avance, regreso y cierre.
+- Se confirmó únicamente la presencia de la clave local sin imprimirla ni modificar el .env. Las pruebas usan servicios simulados y no envían ubicaciones ni consumen llamadas a Google.
+- No hubo navegador interactivo disponible. Queda pendiente comprobar el mapa/sugerencias reales y la presentación visual con las APIs, facturación y restricciones del proyecto de Google Cloud del usuario. La implementación no activa APIs ni cambia la cuenta de Google Cloud.
+- No se modificó el backend o la base de datos. No se crearon commits ni se subió esta actualización a GitHub.
+
+Guía: [UBICACION-Y-GUIA.md](./UBICACION-Y-GUIA.md).
+
+
+## Verificación: instalador SQL único y guía para otras computadoras
+
+- Creado Mysql/00_instalacion_completa.sql, autosuficiente, con el esquema actual completo y los catálogos públicos. No incluye datos de cuentas ni credenciales.
+- Ejecutado todo el archivo en una sola llamada MySQL sobre una base temporal nueva: 26 tablas, 43 distritos y 7 barrios iniciales.
+- Segunda ejecución completa sin duplicar el catálogo; cero cuentas precargadas. Columnas de comunidad/ubicación/offline e índices únicos comprobados.
+- Backend conectado al esquema instalado: health/db correcto, registro y publicación de trueque con ubicación correctos mediante API. Sin correos, SMS ni servicios externos.
+- Eliminada únicamente la base temporal creada para la comprobación. Conteos de usuarios/publicaciones de la base original conservados.
+- Creada INSTALACION-Y-COMANDOS.md en la raíz con descargas, SQL, npm install en cada carpeta, .env, secreto de recuperación, dos terminales, administrador opcional, proveedores, PWA y solución de errores.
+- No se cambió el código de las aplicaciones ni se reconstruyó el frontend por esta entrega de SQL y documentación. No se crearon commits ni se subieron cambios a GitHub.
+
+
+## Datos ficticios para tres distritos
+
+- Creado Mysql/07_datos_ejemplo_distritos.sql con cinco vecinos, trueques, apoyos, emprendimientos, avisos públicos, eventos y comunidades por distrito: Puente Piedra, Los Olivos y San Martín de Porres. Agrega un mensaje de muro por comunidad, interacciones y conversaciones demo.
+- Probado sobre una base temporal instalada desde 00: 15 usuarios, 75 publicaciones (60 públicas y 15 de comunidades), 15 eventos, 15 comunidades, 75 membresías y 3 conversaciones con 15 mensajes.
+- Segunda ejecución sin duplicar filas en ninguna de las 26 tablas. Las cuentas no tienen rol admin, teléfonos ni consentimiento SMS.
+- Inicio de sesión real por API con una cuenta de cada distrito; cinco registros por módulo, cinco eventos/comunidades, pertenencia y un mensaje en cada muro, perfil y cinco guardados por cuenta comprobados. Inicio combina 20 publicaciones públicas por distrito.
+- Solo se cargaron datos en bases temporales de verificación, eliminadas al terminar. La base actual no se modificó; no se enviaron correos ni SMS y no se subió nada a GitHub.
+- Cuentas e instrucciones en Mysql/DATOS-DE-EJEMPLO.md.
+
+
+## Preparación de publicación: filtros y archivos de instalación
+
+- Filtros de publicaciones: Disponibles, Completados y Cualquier estado; el botón de categoría se llama Todas las categorías. Eventos y comunidades emplean la misma etiqueta de categoría. No cambia el alcance del filtrado.
+- npm test: 21 pruebas aprobadas, cero fallos y cero omitidas. npm run verify: 15 vistas comprobadas. npm run build: 105 módulos, Service Worker y 70 entradas de precache generados.
+- Se conservan las rutas de INSTALACION-Y-COMANDOS.md, Mysql/00_instalacion_completa.sql, Mysql/07_datos_ejemplo_distritos.sql, Mysql/DATOS-DE-EJEMPLO.md y las guías existentes. Los SQL ya fueron comprobados en bases temporales según los apartados anteriores.
+- El primer intento con configuración completa y DB_PASSWORD vacío fue bloqueado por revisión automática por exposición de credenciales de proveedores. Se corrigió el commit no publicado para incluir únicamente configuración sin secretos; los archivos locales completos se conservan. Las plantillas también se conservan. No se incluyen node_modules, dist, respaldos MySQL ni uploads privados.

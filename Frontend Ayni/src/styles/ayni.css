@@ -1479,3 +1479,30 @@ body {
     padding-bottom: 120px;
   }
 }
+
+/* Location picker and plain-language guide */
+.location-help, .location-picker { font-size: 14px; line-height: 1.6; color: #45513c; }
+.location-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.location-actions button { min-height: 44px; white-space: normal; text-align: left; }
+.location-toggle { display: inline-flex; align-items: center; gap: 8px; }
+.location-picker { display: grid; gap: 12px; min-width: 0; }
+.location-search { min-width: 0; }
+.location-search gmp-place-autocomplete { display: block; width: 100%; min-height: 48px; color-scheme: light; }
+.location-search-status:empty { display: none; }
+.location-search-status { color: #45513c; }
+.location-alternatives { font-size: 14px; }
+.location-alternatives summary { cursor: pointer; padding: 12px 0; color: #3c5936; font-weight: 600; }
+.location-alternatives label { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.location-alternatives button { margin-top: 10px; }
+.guide-content { font-size: 16px; line-height: 1.7; color: #343e30; }
+.guide-content .guide-tip { font-size: 15px; color: #43553a; }
+.guide-step-count { margin: 14px 0; color: #4c5943; font-size: 14px; }
+.guide-instructions { list-style: decimal; padding-left: 1.5em; display: grid; gap: 14px; }
+.guide-instructions li { padding-left: 4px; }
+.guide-instructions li::marker { font-weight: 700; color: #435c35; }
+.guide-launch small { color: #4f5e42; font-size: 13px; }
+.guide-heading:focus-visible { outline: 2px solid #4e6b3e; outline-offset: 5px; border-radius: 4px; }
+.guide-navigation { display: flex; justify-content: space-between; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+.guide-navigation button { min-height: 44px; }
+.location-field button:focus-visible, .location-alternatives summary:focus-visible, .location-actions button:focus-visible, .guide-navigation button:focus-visible, .guide-launch:focus-visible { outline: 3px solid #4e6b3e; outline-offset: 3px; }
+@media (max-width: 480px) { .address-field { padding: 12px; } .location-actions > button { width: 100%; } .location-map { height: 260px; } }

@@ -83,7 +83,7 @@ export default function Eventos() {
               setOffset(0);
             }}
           >
-            Todos (
+            Todas las categorías (
             {Object.values(data.counts).reduce((s, n) => s + Number(n), 0)})
           </button>
           {categories.map((c) => (

@@ -38,3 +38,8 @@ La configuración de SMTP y Twilio pertenece exclusivamente al backend. Reinicia
 ## Offline-First local
 
 Ver [OFFLINE-FIRST.md](../OFFLINE-FIRST.md). Pruebas de IndexedDB: `npm test`. PWA: `npm run build` y `npm run preview`. Nuevos módulos: `models/offline-db.js`, `sync-queue.js`, `http.js`, `OfflineStatus`, `QueuedPosts`, `PwaUpdate`, `AddressField`, `InteractiveGuide` y vistas `Busqueda`/`Publicacion`. La clave Maps opcional va en `.env`, nunca se necesita para guardar una dirección o abrir enlaces de coordenadas.
+
+
+## Mapa y guía accesible
+
+Ver [UBICACION-Y-GUIA.md](../UBICACION-Y-GUIA.md). El autocompletado usa Places API (New); el mapa usa Maps JavaScript API. La clave se lee del .env local. La prueba test/location-guide.test.mjs utiliza jsdom 26, Google/GPS simulados y no consume consultas reales.
