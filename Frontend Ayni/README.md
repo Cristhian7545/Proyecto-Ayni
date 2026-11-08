@@ -33,3 +33,8 @@ La configuración de SMTP y Twilio pertenece exclusivamente al backend. Reinicia
 ## Muros de comunidad y perfil actualizado
 
 `src/views/Comunidad.jsx` atiende `/comunidades/:communityId` y reutiliza `LivePublications`. `CommunityPostForm`, `PostGallery`, `UserCommunities` y `AdminUsers` contienen los controles nuevos. `Perfil.jsx` utiliza controles compactos con modales en una columna lateral; las comunidades reemplazan las recomendaciones. `Recuperar.jsx` muestra correo, confirmación de código y confirmación de contraseña. Ver [guía actual](../ACTUALIZACION-COMUNIDADES.md).
+
+
+## Offline-First local
+
+Ver [OFFLINE-FIRST.md](../OFFLINE-FIRST.md). Pruebas de IndexedDB: `npm test`. PWA: `npm run build` y `npm run preview`. Nuevos módulos: `models/offline-db.js`, `sync-queue.js`, `http.js`, `OfflineStatus`, `QueuedPosts`, `PwaUpdate`, `AddressField`, `InteractiveGuide` y vistas `Busqueda`/`Publicacion`. La clave Maps opcional va en `.env`, nunca se necesita para guardar una dirección o abrir enlaces de coordenadas.

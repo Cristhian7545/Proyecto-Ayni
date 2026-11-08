@@ -41,7 +41,7 @@ export default function Comunidades() {
     return () => {
       active = false;
     };
-  }, [category, offset, version, user?.id, admin, loading]);
+  }, [category, offset, version, user?.id, user?.district, admin, loading]);
   return (
     <main className="w-full pt-28 max-w-[1200px] mx-auto px-margin-desktop pb-12">
       <section className="bg-surface-container-low rounded-2xl p-6 mt-4">

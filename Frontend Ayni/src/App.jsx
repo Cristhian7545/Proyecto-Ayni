@@ -1,3 +1,5 @@
+import OfflineStatus from './components/OfflineStatus.jsx';
+import PwaUpdate from './components/PwaUpdate.jsx';
 import { FeedbackProvider } from './controllers/FeedbackContext.jsx';
 import { SessionProvider } from './controllers/SessionContext.jsx';
 import Header from './components/Header.jsx';
@@ -9,6 +11,8 @@ export default function App() {
     <SessionProvider>
       <FeedbackProvider>
         <Header />
+        <OfflineStatus />
+        <PwaUpdate />
         <AppRoutes />
         <Footer />
       </FeedbackProvider>

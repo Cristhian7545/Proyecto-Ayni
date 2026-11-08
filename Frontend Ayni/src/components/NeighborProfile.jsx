@@ -1,3 +1,4 @@
+import LivePublications from './LivePublications.jsx';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, assetUrl } from '../models/api.js';
@@ -51,6 +52,7 @@ export default function NeighborProfile({ userId }) {
             </div>
           </section>
           <UserCommunities userId={userId} />
+          <LivePublications authorId={userId} />
         </>
       )}
     </main>

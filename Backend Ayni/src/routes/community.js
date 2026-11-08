@@ -9,13 +9,22 @@ export function communityRoutes(db, auth, optionalAuth) {
   router.get('/', async (req, res) => {
     const { limit, offset } = paging(req.query);
     const args = [req.user?.id || null];
+    const districtWhere = req.user?.district ? ' AND district=?' : '';
+    const districtValues = req.user?.district ? [req.user.district] : [];
     const [groups] = await db.execute(
-      "SELECT category,COUNT(*) AS n FROM comunidades WHERE status='approved' GROUP BY category",
+      "SELECT category,COUNT(*) AS n FROM comunidades WHERE status='approved'" +
+        districtWhere +
+        ' GROUP BY category',
+      districtValues,
     );
     const counts = Object.fromEntries(
       groups.map((g) => [g.category, Number(g.n)]),
     );
     let filter = "c.status='approved'";
+    if (req.user?.district) {
+      filter += ' AND c.district=?';
+      args.push(req.user.district);
+    }
     if (req.query.category) {
       filter += ' AND c.category=?';
       args.push(text(1, 80).parse(req.query.category));

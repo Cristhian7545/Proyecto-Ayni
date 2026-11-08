@@ -47,3 +47,20 @@ No hubo una nueva revisión visual automatizada en navegador porque la herramien
 - No hay navegador interactivo disponible en esta sesión: la revisión visual y de clics queda pendiente. Se comprobó compilación, renderizado y API.
 
 Guía actual: [ACTUALIZACION-COMUNIDADES.md](./ACTUALIZACION-COMUNIDADES.md). Reinicia backend y frontend; en este equipo la migración ya está aplicada.
+
+
+## Verificación: Offline-First, búsqueda y ubicación
+
+Fecha: 8 de noviembre de 2026.
+
+- Backend con MySQL real: 32 pruebas aprobadas, cero fallos y cero omitidas. Incluyen distrito y conteos, búsqueda, validación de coordenadas, permisos, sesión/propietario, subidas idempotentes, reintentos y concurrencia. La suite nueva se volvió a ejecutar tras añadir la comprobación del detalle de eventos: 7 aprobadas.
+- Frontend: 14 pruebas de IndexedDB y cola aprobadas, cero fallos. Se comprueban blobs persistentes, respuesta perdida, cambios de cuenta/pestaña, vencimiento de sesión, errores rechazados, HTTP 429, cache por cuenta y URLs de ubicación.
+- npm run verify: quince vistas renderizadas, guía de ocho pasos, envío del formulario con ubicación, distritos y controles existentes comprobados.
+- npm run build completado. PWA: manifiesto, iconos, 23 chunks de JavaScript en precache y exclusión de API/uploads comprobados. Vista previa HTTP: rutas SPA, Service Worker, proxy y CORS del backend correctos.
+- Instalación limpia del SQL en una base temporal: 26 tablas, 43 distritos, columnas de ubicación e idempotencia e índices únicos comprobados; se eliminó solo esa base temporal.
+- Migración de la base local aplicada con respaldo. Se mantienen 26 tablas. Cuentas temporales residuales de la suite offline: cero.
+- Dependencias de producción del frontend: npm audit --omit=dev informa cero vulnerabilidades. El audit completo conserva seis avisos transitivos de herramientas de compilación de Workbox (dos bajos y cuatro moderados); npm audit fix no ofrece una corrección compatible. No se forzaron degradaciones.
+- No se enviaron correos ni SMS reales. No se subió nada a GitHub y no se crearon commits en esta solicitud.
+- No hubo navegador interactivo disponible. La instalación PWA, recarga offline, revisión visual y selector integrado de Google Maps requieren la prueba manual descrita en la guía. La compilación y pruebas automatizadas no equivalen a esa revisión. No se utilizó una clave real de Google Maps.
+
+Guía vigente: [OFFLINE-FIRST.md](./OFFLINE-FIRST.md). Reinicia los servidores. Para probar el Service Worker, usa npm run build y npm run preview; está desactivado en desarrollo.

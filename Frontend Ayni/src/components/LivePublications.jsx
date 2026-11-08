@@ -1,3 +1,5 @@
+import QueuedPosts from './QueuedPosts.jsx';
+import { mapsUrl } from '../models/maps.js';
 import PostGallery from './PostGallery.jsx';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -53,7 +55,11 @@ export function PostCard({ post, onChange }) {
       <PostGallery post={post} />
       <div className="p-5 sm:p-6 flex flex-col flex-1 gap-3">
         <div className="flex gap-3 items-center">
-          <span className="avatar-thumb">
+          <Link
+            to={`/perfil-de-vecino?usuario=${post.author_id}`}
+            className="avatar-thumb"
+            aria-label={`Ver perfil de ${post.author_name}`}
+          >
             {post.author_photo ? (
               <img
                 src={assetUrl(post.author_photo)}
@@ -63,7 +69,7 @@ export function PostCard({ post, onChange }) {
             ) : (
               post.author_name.slice(0, 1)
             )}
-          </span>
+          </Link>
           <div>
             <Link
               className="font-semibold hover:underline"
@@ -110,6 +116,32 @@ export function PostCard({ post, onChange }) {
             S/ {Number(post.price).toFixed(2)}{' '}
             {post.accepts_barter ? '· Acepta trueque' : ''}
           </p>
+        )}
+        {mapsUrl(post) && (
+          <div className="publication-location">
+            <span className="material-symbols-outlined" aria-hidden="true">
+              location_on
+            </span>
+            <div>
+              <p className="font-semibold">
+                {post.address || 'Punto de encuentro'}
+              </p>
+              {post.latitude != null && (
+                <p className="text-xs text-on-surface-variant">
+                  {Number(post.latitude).toFixed(6)},{' '}
+                  {Number(post.longitude).toFixed(6)}
+                </p>
+              )}
+              <a
+                href={mapsUrl(post)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm underline text-primary"
+              >
+                Ver punto en Google Maps ↗
+              </a>
+            </div>
+          </div>
         )}
         <div className="post-actions flex gap-2 flex-wrap mt-auto pt-3">
           <button
@@ -263,7 +295,12 @@ export function PostCard({ post, onChange }) {
     </PublicacionCard>
   );
 }
-export default function LivePublications({ module, own = false, communityId }) {
+export default function LivePublications({
+  module,
+  own = false,
+  communityId,
+  authorId,
+}) {
   const { user, loading: sessionLoading } = useSession();
   const [scope, setScope] = useState('own'),
     [status, setStatus] = useState('active'),
@@ -297,6 +334,7 @@ export default function LivePublications({ module, own = false, communityId }) {
     });
     if (module) params.set('module', module);
     if (communityId) params.set('community', communityId);
+    if (authorId) params.set('author', authorId);
     if (own && scope === 'own') params.set('author', user.id);
     if (own && scope === 'saved') params.set('saved', '1');
     if (category) params.set('category', category);
@@ -320,9 +358,11 @@ export default function LivePublications({ module, own = false, communityId }) {
   }, [
     module,
     communityId,
+    authorId,
     own,
     scope,
     user?.id,
+    user?.district,
     sessionLoading,
     status,
     category,
@@ -362,6 +402,27 @@ export default function LivePublications({ module, own = false, communityId }) {
             ? 'Muro de publicaciones'
             : 'Publicaciones de la comunidad'}
       </h2>
+      {!own && !communityId && !authorId && (
+        <p className="district-notice">
+          {user?.district
+            ? 'Mostrando contenido de ' +
+              user.district +
+              ' · Distrito de tu perfil'
+            : 'Contenido público · Inicia sesión para ver el contenido de tu distrito.'}
+        </p>
+      )}
+      {data.__offline && (
+        <p role="status" className="offline-reading">
+          Sin conexión: última lectura guardada. Los filtros sin lecturas
+          previas necesitarán conexión.
+        </p>
+      )}
+      <QueuedPosts
+        module={module}
+        communityId={communityId}
+        own={own}
+        authorId={authorId}
+      />
       {own && (
         <div
           className="filter-grid"

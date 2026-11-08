@@ -1,3 +1,4 @@
+import AddressField from './AddressField.jsx';
 import MoneyField from './MoneyField.jsx';
 import { useState } from 'react';
 import PhotoField from './PhotoField.jsx';
@@ -33,11 +34,15 @@ export default function PublicationForm({ kind, onClose }) {
         setBusy(true);
         setError('');
         try {
-          await savePublication(data, kind);
+          const result = await savePublication(data, kind);
           onClose();
           notify({
-            title: '¡Publicación creada!',
-            message: 'Tu publicación ya aparece en el catálogo de Ayni.',
+            title: result.queued
+              ? 'Publicación guardada en este dispositivo'
+              : '¡Publicación creada!',
+            message: result.queued
+              ? 'Está pendiente de envío. Se publicará al recuperar conexión y sesión; puedes revisarla en Pendientes.'
+              : 'Tu publicación ya aparece en el catálogo de Ayni.',
           });
         } catch (e) {
           setError(e.details?.map((d) => d.message).join(' ') || e.message);
@@ -156,6 +161,7 @@ export default function PublicationForm({ kind, onClose }) {
         </>
       )}
       {schedule && <ScheduleFields />}
+      <AddressField />
       <PhotoField />
       {error && (
         <p role="alert" className="text-error">

@@ -160,3 +160,8 @@ El registro exige celular peruano y contraseña de diez caracteres con mayúscul
 ## Muros, códigos y administración de cuentas
 
 Ver [guía actual](../ACTUALIZACION-COMUNIDADES.md). Migración: `npm run db:migrate:community`. API nueva: GET `/api/communities/:id`, listados de posts con `community`, creación con `communityId` y hasta seis `mediaIds`; fotos protegidas en `/api/posts/:id/media/:mediaId`; comunidades del perfil en `/api/users/me/communities` y `/api/users/:id/communities`. CRUD admin en `/api/admin/users` y `/api/admin/users/:id`. Recuperación: POST `/api/auth/forgot-password` → `/api/auth/verify-code` → `/api/auth/reset-password`. No registrar códigos, tokens o credenciales SMTP en logs.
+
+
+## Cola offline, distrito y búsqueda
+
+`npm run db:migrate:offline` realiza respaldo y agrega columnas e índices; `db:init` lo incluye. POST `/api/sync/posts` requiere sesión y `{ownerId,entries:[{clientId,payload}]}`. Las subidas admiten el campo opcional `clientId`. El header `X-Ayni-Owner` rechaza cuentas distintas antes de procesar datos. La creación se comparte en `services/posts.js`; no hay doble lógica de negocio. GET `/api/search` recibe `q`, `type`, `limit`, `offset`. Inicio, catálogos, destacados y búsqueda filtran por el distrito real del usuario. Ver [guía](../OFFLINE-FIRST.md).

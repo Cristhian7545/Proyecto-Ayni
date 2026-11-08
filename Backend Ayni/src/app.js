@@ -1,3 +1,5 @@
+import { syncRoutes } from './routes/sync.js';
+import { searchRoutes } from './routes/search.js';
 import path from 'node:path';
 import { adminUserRoutes } from './routes/admin-users.js';
 import { adminRoutes } from './routes/admin.js';
@@ -60,11 +62,26 @@ export function createApp(db = pool, services = {}) {
     res.json({ status: 'ok', database: 'connected' });
   });
   const { router, auth, optionalAuth } = createAuth(db);
+  app.use('/api', (req, res, next) => {
+    if (!req.get('X-Ayni-Owner')) return next();
+    return optionalAuth(req, res, () => {
+      if (req.get('X-Ayni-Owner') !== (req.user?.id || 'guest'))
+        return next(
+          new HttpError(
+            409,
+            'La cuenta cambió. Inicia sesión con la cuenta correspondiente.',
+          ),
+        );
+      next();
+    });
+  });
   app.use('/api/auth', router);
   app.use('/api/auth', recoveryRoutes(db, auth, services));
   app.use('/api/admin/users', adminUserRoutes(db, auth));
   app.use('/api/admin', adminRoutes(db, auth, services));
   app.use('/api/users', userRoutes(db, auth));
+  app.use('/api/sync', syncRoutes(db, auth));
+  app.use('/api/search', searchRoutes(db, optionalAuth));
   app.use('/api/posts', postRoutes(db, auth, optionalAuth));
   app.use('/api/location', locationRoutes(undefined, db));
   app.use('/api/events', eventRoutes(db, auth, optionalAuth));

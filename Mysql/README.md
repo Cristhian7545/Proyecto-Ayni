@@ -14,3 +14,6 @@ Las columnas y las rutas de la API conservan sus nombres anteriores por compatib
 
 
 Actualización: 26 tablas. Se agregó `codigos_recuperacion`, `usuarios.deleted_at` y `publicaciones.community_id` con FK a comunidades. `npm run db:migrate:community` realiza respaldo, aplica los cambios y genera la clave privada local para los códigos. `db:init` incluye esa migración. 01_crear_tablas.sql contiene el esquema completo. La migración de este equipo ya está aplicada.
+
+
+Offline-First: se mantienen 26 tablas; se agregan `publicaciones.client_request_id`, `sync_hash`, `address`, `latitude`, `longitude`; `archivos_multimedia.client_request_id` y `eventos.district`. Los índices únicos por autor/propietario y solicitud evitan duplicados. `01_crear_tablas.sql` contiene el esquema completo. En instalaciones existentes usa `npm run db:migrate:offline`; el script comprueba columnas/índices y respalda antes de aplicar.

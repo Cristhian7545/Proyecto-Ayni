@@ -135,11 +135,15 @@ export default function Comunidad() {
         {open && community?.joined && (
           <CommunityPostForm
             community={community}
-            onSaved={() => {
+            onSaved={(result) => {
               close();
               notify({
-                title: '¡Publicación creada!',
-                message: 'Tu contenido ya está en el muro de la comunidad.',
+                title: result.queued
+                  ? 'Publicación guardada en este dispositivo'
+                  : '¡Publicación creada!',
+                message: result.queued
+                  ? 'Se enviará cuando haya conexión y tu sesión esté vigente.'
+                  : 'Tu contenido ya está en el muro de la comunidad.',
               });
             }}
           />

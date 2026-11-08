@@ -1,5 +1,5 @@
 import { assetUrl } from '../models/api.js';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useSession } from '../controllers/SessionContext.jsx';
 const items = [
   ['inicio', 'Inicio'],
@@ -10,6 +10,8 @@ const items = [
   ['comunidades', 'Comunidades'],
 ];
 export default function Header() {
+  const navigate = useNavigate(),
+    location = useLocation();
   const { user, logout } = useSession();
   return (
     <header className="ayni-header fixed top-0 left-0 w-full z-50 bg-surface-container-lowest/95 backdrop-blur-md shadow-sm">
@@ -32,16 +34,33 @@ export default function Header() {
               <span className="block text-xs">Tu barrio conectado</span>
             </span>
           </Link>
-          <label className="ayni-search">
+          <form
+            role="search"
+            className="ayni-search"
+            key={location.pathname + location.search}
+            onSubmit={(e) => {
+              e.preventDefault();
+              const q = new FormData(e.currentTarget).get('q').trim();
+              if (q.length >= 2) navigate('/buscar?q=' + encodeURIComponent(q));
+            }}
+          >
             <span className="material-symbols-outlined" aria-hidden="true">
               search
             </span>
             <input
+              name="q"
+              minLength={2}
+              maxLength={120}
+              required
+              defaultValue={new URLSearchParams(location.search).get('q') || ''}
               type="search"
               aria-label="Buscar en Ayni"
               placeholder="Buscar publicaciones, vecinos o iniciativas..."
             />
-          </label>
+            <button type="submit" className="search-submit" aria-label="Buscar">
+              Ir
+            </button>
+          </form>
           <div className="flex items-center gap-1 shrink-0">
             <Link
               to="/mensajes"

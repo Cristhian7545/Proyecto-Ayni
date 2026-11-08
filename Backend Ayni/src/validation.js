@@ -67,6 +67,9 @@ export const postSchema = z
     end: time.optional(),
     mode: z.enum(['Presencial', 'Virtual', 'Mixta']).default('Presencial'),
     mediaId: uuid.optional(),
+    address: text(0, 255).optional(),
+    latitude: z.number().finite().min(-90).max(90).optional(),
+    longitude: z.number().finite().min(-180).max(180).optional(),
     mediaIds: z.array(uuid).max(6).optional(),
     communityId: id.optional(),
   })
@@ -74,6 +77,8 @@ export const postSchema = z
   .superRefine((p, ctx) => {
     const add = (path, message) =>
       ctx.addIssue({ code: 'custom', path: [path], message });
+    if ((p.latitude === undefined) !== (p.longitude === undefined))
+      add('latitude', 'Completa ambas coordenadas del punto.');
     if (
       new Set([...(p.mediaIds || []), ...(p.mediaId ? [p.mediaId] : [])]).size >
       6
@@ -129,6 +134,7 @@ export const postSchema = z
   });
 export const eventSchema = z
   .object({
+    district: district.optional(),
     title: text(3, 160),
     description: text(5, 5000),
     category: text(2, 80),

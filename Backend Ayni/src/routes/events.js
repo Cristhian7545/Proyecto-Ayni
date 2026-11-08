@@ -9,8 +9,15 @@ export function eventRoutes(db, auth, optionalAuth) {
       clauses = [],
       args = [],
       viewer = req.user?.id || null;
+    if (req.user?.district) {
+      clauses.push('e.district=?');
+      args.push(req.user.district);
+    }
     const [groups] = await db.execute(
-      'SELECT category,COUNT(*) AS n FROM eventos GROUP BY category',
+      'SELECT category,COUNT(*) AS n FROM eventos e' +
+        (clauses.length ? ' WHERE ' + clauses.join(' AND ') : '') +
+        ' GROUP BY category',
+      args,
     );
     const counts = Object.fromEntries(
       groups.map((g) => [g.category, Number(g.n)]),
@@ -38,6 +45,20 @@ export function eventRoutes(db, auth, optionalAuth) {
       counts,
     });
   });
+  router.get('/:id', async (req, res) => {
+    const [rows] = await db.execute(
+      'SELECT e.*,u.name AS organizer,(SELECT COUNT(*) FROM intereses_eventos WHERE event_id=e.id) AS interested,EXISTS(SELECT 1 FROM intereses_eventos WHERE event_id=e.id AND user_id=?) AS selected FROM eventos e JOIN usuarios u ON u.id=e.organizer_id WHERE e.id=?',
+      [req.user?.id || null, id.parse(req.params.id)],
+    );
+    if (!rows.length) fail(404, 'Evento no encontrado.');
+    res.json({
+      event: {
+        ...rows[0],
+        interested: Number(rows[0].interested),
+        selected: !!Number(rows[0].selected),
+      },
+    });
+  });
   router.post('/', auth, async (req, res) => {
     const v = eventSchema.parse(req.body);
     let image = null;
@@ -50,7 +71,7 @@ export function eventRoutes(db, auth, optionalAuth) {
       image = rows[0].url;
     }
     const [r] = await db.execute(
-      'INSERT INTO eventos(organizer_id,title,description,category,location,starts_at,ends_at,contribution,image_url) VALUES(?,?,?,?,?,?,?,?,?)',
+      'INSERT INTO eventos(organizer_id,title,description,category,location,starts_at,ends_at,contribution,image_url,district) VALUES(?,?,?,?,?,?,?,?,?,?)',
       [
         req.user.id,
         v.title,
@@ -61,6 +82,7 @@ export function eventRoutes(db, auth, optionalAuth) {
         new Date(v.endsAt),
         v.contribution,
         image,
+        v.district ?? req.user.district,
       ],
     );
     res.status(201).json({ id: String(r.insertId) });

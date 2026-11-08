@@ -1,3 +1,4 @@
+import EventDetails from '../components/EventDetails.jsx';
 import { useCallback, useEffect, useState } from 'react';
 import { api, assetUrl, uploadPhoto } from '../models/api.js';
 import { useSession } from '../controllers/SessionContext.jsx';
@@ -52,7 +53,7 @@ export default function Eventos() {
     return () => {
       active = false;
     };
-  }, [category, offset, version, user?.id, sessionLoading]);
+  }, [category, offset, version, user?.id, user?.district, sessionLoading]);
   return (
     <main className="w-full pt-28 max-w-[1200px] mx-auto px-margin-desktop pb-12">
       <section className="p-6 bg-surface-container-low rounded-2xl mt-4">
@@ -69,6 +70,7 @@ export default function Eventos() {
           + Organizar evento
         </button>
       </section>
+      <EventDetails />
       <section className="my-6">
         <h2 className="text-headline-md mb-3">Explorar por categoría</h2>
         <div className="filter-grid">
@@ -216,6 +218,7 @@ export default function Eventos() {
                 title: d.get('title'),
                 description: d.get('description'),
                 category: d.get('category'),
+                district: d.get('district'),
                 location: `${d.get('venue')} · ${d.get('neighborhood')} · ${d.get('district')}`,
                 startsAt: new Date(start).toISOString(),
                 endsAt: new Date(end).toISOString(),

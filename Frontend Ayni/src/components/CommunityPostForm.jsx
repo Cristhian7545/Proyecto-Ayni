@@ -1,3 +1,4 @@
+import { submitPost } from '../models/sync-queue.js';
 import { useEffect, useState } from 'react';
 import { api, uploadPhoto } from '../models/api.js';
 export default function CommunityPostForm({ community, onSaved }) {
@@ -20,25 +21,19 @@ export default function CommunityPostForm({ community, onSaved }) {
         setBusy(true);
         setError('');
         try {
-          const mediaIds = [];
-          for (const file of files) {
-            const media = await uploadPhoto(file);
-            mediaIds.push(media.id);
-          }
-          await api('/posts', {
-            method: 'POST',
-            body: JSON.stringify({
+          const result = await submitPost(
+            {
               module: 'aviso',
               category: 'Comunidad',
               communityId: String(community.id),
               title: d.get('title'),
               description: d.get('description'),
               district: community.district,
-              mediaIds,
-            }),
-          });
+            },
+            files,
+          );
           window.dispatchEvent(new Event('ayni:posts-updated'));
-          onSaved();
+          onSaved(result);
         } catch (e) {
           setError(e.details?.map((d) => d.message).join(' ') || e.message);
         } finally {

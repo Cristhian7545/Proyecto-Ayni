@@ -1,40 +1,83 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { api, uploadPhoto, assetUrl } from '../models/api.js';
-const SessionContext = createContext(null);
-const normalize = (user) =>
-  user ? { ...user, photo: assetUrl(user.photo) } : null;
+import { networkApi } from '../models/http.js';
+import {
+  rememberUser,
+  offlineUser,
+  forgetUser,
+  meta,
+} from '../models/offline-db.js';
+import { synchronize } from '../models/sync-queue.js';
+const SessionContext = createContext(null),
+  normalize = (user) =>
+    user ? { ...user, photo: assetUrl(user.photo) } : null;
 export function SessionProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null),
+    [loading, setLoading] = useState(true);
   useEffect(() => {
     let active = true;
-    api('/auth/me')
-      .then((result) => {
+    async function restore() {
+      try {
+        if (await meta('logout-pending').catch(() => false)) {
+          if (navigator.onLine === false) {
+            if (active) setUser(null);
+            return;
+          }
+          await networkApi('/auth/logout', { method: 'POST' });
+          await meta('logout-pending', undefined);
+        }
+        const result = await networkApi('/auth/me');
+        await rememberUser(result.user).catch(() => {});
         if (active) setUser(normalize(result.user));
-      })
-      .catch(() => {})
-      .finally(() => {
+      } catch (e) {
+        if (e.network || navigator.onLine === false) {
+          if (active) setUser(normalize(await offlineUser().catch(() => null)));
+        } else if (e.status === 401) {
+          await forgetUser().catch(() => {});
+          if (active) setUser(null);
+        }
+      } finally {
         if (active) setLoading(false);
-      });
+      }
+    }
+    restore();
+    window.addEventListener('online', restore);
+    window.addEventListener('focus', restore);
     return () => {
       active = false;
+      window.removeEventListener('online', restore);
+      window.removeEventListener('focus', restore);
     };
   }, []);
   async function authenticate(mode, input) {
-    const result = await api(`/auth/${mode}`, {
+    if (await meta('logout-pending').catch(() => false)) {
+      await networkApi('/auth/logout', { method: 'POST' });
+      await meta('logout-pending', undefined);
+    }
+    const result = await networkApi('/auth/' + mode, {
       method: 'POST',
       body: JSON.stringify(input),
     });
+    await rememberUser(result.user).catch(() => {});
     setUser(normalize(result.user));
+    synchronize().catch(() => {});
     return result.user;
   }
   async function refreshSession() {
-    const result = await api('/auth/me');
+    const result = await networkApi('/auth/me');
+    await rememberUser(result.user).catch(() => {});
     setUser(normalize(result.user));
     return result.user;
   }
   async function logout() {
-    await api('/auth/logout', { method: 'POST' });
+    try {
+      await networkApi('/auth/logout', { method: 'POST' });
+      await meta('logout-pending', undefined);
+    } catch (e) {
+      if (!e.network) throw e;
+      await meta('logout-pending', true);
+    }
+    await forgetUser();
     setUser(null);
   }
   async function updateProfile(data) {
@@ -52,6 +95,7 @@ export function SessionProvider({ children }) {
       method: 'PATCH',
       body: JSON.stringify(input),
     });
+    await rememberUser(result.user).catch(() => {});
     setUser(normalize(result.user));
   }
   return (
@@ -69,6 +113,4 @@ export function SessionProvider({ children }) {
     </SessionContext.Provider>
   );
 }
-export function useSession() {
-  return useContext(SessionContext);
-}
+export const useSession = () => useContext(SessionContext);

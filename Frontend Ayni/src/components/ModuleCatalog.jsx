@@ -58,17 +58,14 @@ export default function ModuleCatalog({ module }) {
         <>
           <EmergencyContacts />
           <section className="bg-secondary-container/40 rounded-2xl p-6 my-6">
-            <span className="text-sm text-primary">
-              Aviso de referencia comunitaria
-            </span>
+            <span className="text-sm text-primary">Ayuda cerca de ti</span>
             <h2 className="text-headline-md my-2">
-              Acopio solidario para familias afectadas por aniego en Jr.
-              Libertad
+              Solicitudes y ofrecimientos en {user?.district || 'tu distrito'}
             </h2>
             <p>
-              Coordina con los organizadores antes de acudir a un punto de
-              acopio. Consulta las publicaciones vigentes de tus vecinos para
-              conocer las necesidades actuales.
+              Consulta las necesidades vigentes y los recursos que tus vecinos
+              comparten. Usa el formulario para solicitar ayuda u ofrecer apoyo
+              gratuito en tu distrito.
             </p>
           </section>
         </>

@@ -63,3 +63,16 @@ Guía de configuración: [ADMINISTRACION-Y-CORREO.md](./ADMINISTRACION-Y-CORREO.
 - No hay navegador interactivo disponible en esta sesión: la revisión visual y de clics queda pendiente. Se comprobó compilación, renderizado y API.
 
 Guía actual: [ACTUALIZACION-COMUNIDADES.md](./ACTUALIZACION-COMUNIDADES.md). Reinicia backend y frontend; en este equipo la migración ya está aplicada.
+
+
+## Actualización local: Offline-First y descubrimiento por distrito
+
+- PWA con vite-plugin-pwa y Service Worker para abrir la interfaz previamente preparada sin conexión. IndexedDB guarda publicaciones, trueques, apoyos, emprendimientos y fotos como pendientes por cuenta.
+- Cola que reintenta con sesión válida al volver la conexión. Endpoint autenticado de sincronización, IDs estables y restricciones únicas en MySQL para evitar duplicados tras perder una respuesta. Los errores de datos permanecen visibles para revisión.
+- Inicio, catálogos, eventos, comunidades, búsqueda y sus contadores utilizan el distrito registrado. Perfiles, guardados y muros de comunidad conservan su alcance y permisos propios.
+- Foto y nombre del autor abren su perfil real. El buscador superior permite explorar publicaciones, eventos, comunidades y vecinos con enlaces al resultado.
+- Guía interactiva de ocho pasos sobre registro, publicaciones, ubicación, comunidades, interacciones, uso offline y cuenta.
+- Dirección y punto de encuentro opcionales en formularios, mediante GPS, coordenadas o enlace completo de Maps; se muestran sobre las acciones de la tarjeta. Un mapa integrado seleccionable requiere configurar la clave opcional de Google.
+- Migración aplicada con respaldo previo, conservando las 26 tablas y los datos. No se hicieron commits ni subidas a GitHub en esta solicitud.
+
+Configuración y prueba manual: [OFFLINE-FIRST.md](./OFFLINE-FIRST.md).

@@ -1,3 +1,4 @@
+import 'fake-indexeddb/auto';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -54,6 +55,8 @@ try {
     'Administracion',
     'Recuperar',
     'Comunidad',
+    'Busqueda',
+    'Publicacion',
   ]) {
     const { default: View } = await server.ssrLoadModule(
       `/src/views/${view}.jsx`,
@@ -125,15 +128,34 @@ try {
   assert.equal((header.match(/data-path=/g) || []).length, 6);
   assert.match(header, /logo-ayni.png/);
   const { savePublication } = await server.ssrLoadModule('/src/models/api.js');
+  const local = await server.ssrLoadModule('/src/models/offline-db.js');
+  const owner = {
+    id: '00000000-0000-4000-8000-000000000001',
+    name: 'Prueba',
+    district: 'Ate',
+    neighborhood: 'Mi barrio',
+  };
+  await local.rememberUser(owner);
   const originalFetch = globalThis.fetch,
     originalWindow = globalThis.window;
   let sent;
   try {
-    globalThis.fetch = async (url, options) => {
-      sent = JSON.parse(options.body);
-      return { ok: true, status: 201, json: async () => ({ id: '123' }) };
-    };
     globalThis.window = { dispatchEvent: () => {} };
+    globalThis.fetch = async (url, opt) => {
+      if (url.endsWith('/auth/me'))
+        return { ok: true, status: 200, json: async () => ({ user: owner }) };
+      const body = JSON.parse(opt.body);
+      sent = body.entries[0].payload;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          results: [
+            { clientId: body.entries[0].clientId, status: 'synced', id: '123' },
+          ],
+        }),
+      };
+    };
     const data = new FormData();
     for (const [key, value] of Object.entries({
       type: 'servicio',
@@ -144,20 +166,36 @@ try {
       start: '09:00',
       end: '10:15',
       mode: 'Presencial',
+      address: 'Entrada del parque',
+      latitude: '-12.04',
+      longitude: '-77.03',
     }))
       data.set(key, value);
     data.append('days', 'Lunes');
     data.append('days', 'Miércoles');
-    await savePublication(data, 'apoyo');
+    const result = await savePublication(data, 'apoyo');
+    assert.equal(result.queued, false);
     assert.equal(sent.module, 'apoyo');
     assert.equal(sent.days, 'Lunes, Miércoles');
     assert.equal(sent.district, 'Ate');
-    assert.equal(sent.neighborhood, 'Mi barrio');
+    assert.equal(sent.latitude, -12.04);
+    assert.equal(sent.address, 'Entrada del parque');
   } finally {
     globalThis.fetch = originalFetch;
     if (originalWindow === undefined) delete globalThis.window;
     else globalThis.window = originalWindow;
+    await local.forgetUser();
+    await local.closeLocalDB();
   }
+  const { guideSteps } = await server.ssrLoadModule(
+    '/src/components/InteractiveGuide.jsx',
+  );
+  assert.equal(guideSteps.length, 8);
+  assert.ok(guideSteps.some((s) => s.title.includes('Publica')));
+  assert.ok(guideSteps.some((s) => s.title.includes('comunidad')));
+  assert.ok(guideSteps.some((s) => s.title.includes('internet')));
+  assert.match(header, /role="search"/);
+  assert.match(header, /name="q"/);
   const { parseMoney } = await server.ssrLoadModule(
     '/src/components/MoneyField.jsx',
   );

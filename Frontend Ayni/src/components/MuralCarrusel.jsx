@@ -1,8 +1,10 @@
+import { useSession } from '../controllers/SessionContext.jsx';
 import { useCallback, useEffect, useState } from 'react';
 import { api, assetUrl } from '../models/api.js';
 import { PostCard } from './LivePublications.jsx';
 import Modal from './Modal.jsx';
 export default function MuralCarrusel() {
+  const { user, loading } = useSession();
   const [posts, setPosts] = useState([]),
     [selected, setSelected] = useState(null),
     [error, setError] = useState(''),
@@ -15,6 +17,7 @@ export default function MuralCarrusel() {
   }, []);
   useEffect(() => {
     let active = true;
+    if (loading) return;
     api('/posts/featured')
       .then((d) => {
         if (active) {
@@ -28,7 +31,7 @@ export default function MuralCarrusel() {
     return () => {
       active = false;
     };
-  }, [version]);
+  }, [version, user?.id, user?.district, loading]);
   async function refresh() {
     setVersion((v) => v + 1);
     if (selected)

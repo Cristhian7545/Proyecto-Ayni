@@ -1,3 +1,4 @@
+import { createPost } from '../services/posts.js';
 import path from 'node:path';
 import { config } from '../config.js';
 import { communityAccess } from '../community-access.js';
@@ -25,6 +26,8 @@ const dto = (row) => {
   );
   return {
     ...row,
+    latitude: row.latitude == null ? null : Number(row.latitude),
+    longitude: row.longitude == null ? null : Number(row.longitude),
     image: row.community_id ? images[0] || null : row.image,
     images,
     pinned: !!Number(row.pinned),
@@ -65,6 +68,21 @@ export function postRoutes(db, auth, optionalAuth) {
       );
       values.push(viewer);
     } else clauses.push('p.community_id IS NULL');
+    if (
+      !req.query.community &&
+      !req.query.author &&
+      req.query.saved !== '1' &&
+      req.user?.district
+    ) {
+      clauses.push('p.district=?');
+      values.push(req.user.district);
+    }
+    if (req.query.q) {
+      clauses.push(
+        "LOCATE(?, CONCAT_WS(' ',p.title,p.description,p.category,p.neighborhood))>0",
+      );
+      values.push(text(2, 120).parse(req.query.q));
+    }
     if (req.query.module) {
       clauses.push('p.module=?');
       values.push(
@@ -138,78 +156,16 @@ export function postRoutes(db, auth, optionalAuth) {
     });
   });
   router.post('/', auth, async (req, res) => {
-    const input = postSchema.parse({
-      ...req.body,
-      district: req.body?.district ?? req.user.district,
-      neighborhood: req.body?.neighborhood ?? req.user.neighborhood,
-    });
-    const postId = await transact(db, async (conn) => {
-      if (input.communityId)
-        await communityAccess(conn, input.communityId, req.user, {
-          admin: false,
-        });
-      const [result] = await conn.execute(
-        'INSERT INTO publicaciones(author_id,module,category,title,description,district,neighborhood,community_id) VALUES(?,?,?,?,?,?,?,?)',
-        [
-          req.user.id,
-          input.module,
-          input.category,
-          input.title,
-          input.description,
-          input.district,
-          input.neighborhood,
-          input.communityId ?? null,
-        ],
-      );
-      const postId = String(result.insertId);
-      if (input.module === 'trueque')
-        await conn.execute(
-          'INSERT INTO detalles_trueque(post_id,offer,request,item_condition,quantity) VALUES(?,?,?,?,?)',
-          [
-            postId,
-            input.offer,
-            input.request,
-            input.condition ?? null,
-            input.quantity,
-          ],
-        );
-      if (input.module === 'apoyo')
-        await conn.execute(
-          'INSERT INTO detalles_apoyo(post_id,priority,item_condition,quantity) VALUES(?,?,?,?)',
-          [postId, input.priority, input.condition ?? null, input.quantity],
-        );
-      if (input.module === 'emprendimiento')
-        await conn.execute(
-          'INSERT INTO detalles_emprendimiento(post_id,price,accepts_barter) VALUES(?,?,?)',
-          [postId, input.price, input.acceptsBarter],
-        );
-      if (input.days)
-        await conn.execute(
-          'INSERT INTO disponibilidad(post_id,days,start_time,end_time,modality) VALUES(?,?,?,?,?)',
-          [postId, input.days, input.start, input.end, input.mode],
-        );
-      for (const mediaId of new Set([
-        ...(input.mediaIds || []),
-        ...(input.mediaId ? [input.mediaId] : []),
-      ])) {
-        const [media] = await conn.execute(
-          'UPDATE archivos_multimedia SET post_id=? WHERE id=? AND owner_id=? AND post_id IS NULL',
-          [postId, mediaId, req.user.id],
-        );
-        if (!media.affectedRows)
-          fail(400, 'La imagen no está disponible para esta publicación.');
-      }
-      return postId;
-    });
-    res.status(201).json({ id: postId });
+    const result = await createPost(db, req.user, req.body);
+    res.status(201).json(result);
   });
   router.get('/featured', async (req, res) => {
     const viewer = req.user?.id || null;
     const [rows] = await db.execute(
       'SELECT * FROM (' +
         select +
-        " WHERE p.community_id IS NULL AND p.status='active' AND p.moderated_at IS NULL AND p.resolved=0 AND (p.pinned=1 OR EXISTS(SELECT 1 FROM me_gusta_publicaciones l WHERE l.post_id=p.id) OR EXISTS(SELECT 1 FROM comentarios c WHERE c.post_id=p.id))) featured ORDER BY pinned DESC,(likes+comments_count) DESC,id DESC LIMIT 6",
-      [viewer, viewer],
+        " WHERE p.community_id IS NULL AND (? IS NULL OR p.district=?) AND p.status='active' AND p.moderated_at IS NULL AND p.resolved=0 AND (p.pinned=1 OR EXISTS(SELECT 1 FROM me_gusta_publicaciones l WHERE l.post_id=p.id) OR EXISTS(SELECT 1 FROM comentarios c WHERE c.post_id=p.id))) featured ORDER BY pinned DESC,(likes+comments_count) DESC,id DESC LIMIT 6",
+      [viewer, viewer, req.user?.district || null, req.user?.district || null],
     );
     res.json({ posts: rows.map(dto) });
   });

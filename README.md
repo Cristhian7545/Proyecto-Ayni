@@ -90,3 +90,12 @@ Las comunidades tienen su propio muro con navegación de regreso, publicaciones 
 La recuperación ahora utiliza un código de seis dígitos por correo y confirmación antes de cambiar la contraseña. El administrador puede buscar, crear, editar, eliminar cuentas y asignar permisos. Consulta [ACTUALIZACION-COMUNIDADES.md](./ACTUALIZACION-COMUNIDADES.md) para los detalles actuales; reemplaza las instrucciones anteriores sobre enlaces de recuperación.
 
 En este equipo ya se aplicó la migración con respaldo. En otras instalaciones existentes: `npm run db:migrate:community` en Backend Ayni. Las instalaciones nuevas usan `npm run db:init`. Reinicia ambos servidores para cargar la actualización.
+
+
+## Modo Offline-First, distrito, búsqueda y ubicación
+
+Actualización local: no se subió a GitHub. Se agregó una PWA con vite-plugin-pwa, cola en IndexedDB con fotos, sincronización autenticada e idempotente y lecturas guardadas por cuenta. Los catálogos, Inicio y búsqueda se basan en el distrito registrado. El buscador superior abre resultados reales y la guía de Inicio explica los servicios en ocho pasos. Los formularios admiten dirección y coordenadas opcionales, con acceso a Google Maps.
+
+Consulta [OFFLINE-FIRST.md](./OFFLINE-FIRST.md) para la arquitectura, los límites, las pruebas y la configuración opcional del mapa. En este equipo la migración ya se aplicó con respaldo. En otras instalaciones existentes ejecuta `npm run db:migrate:offline` en Backend Ayni; `npm run db:init` incluye todo para instalaciones nuevas. Reinicia los dos servidores.
+
+Para probar la PWA, usa `npm run build` y `npm run preview` en Frontend Ayni; abre http://127.0.0.1:4173 primero con conexión. El Service Worker está deshabilitado durante `npm run dev`. La cola conserva pendientes de publicación; chat, comentarios, registro, eventos y administración necesitan conexión.

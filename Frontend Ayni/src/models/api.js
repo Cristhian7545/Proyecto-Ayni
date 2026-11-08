@@ -1,40 +1,64 @@
-const base = (import.meta.env.VITE_API_BASE || '/api').replace(/\/$/, '');
+import {
+  getTabOwner,
+  currentOwner,
+  readSnapshot,
+  saveSnapshot,
+  clearSnapshots,
+} from './offline-db.js';
+import { networkApi } from './http.js';
+import { submitPost } from './sync-queue.js';
+const base = (import.meta.env?.VITE_API_BASE || '/api').replace(/\/$/, '');
 export const assetUrl = (url) => {
   if (!url || !base.startsWith('http')) return url;
   if (url.startsWith('/uploads/')) return new URL(url, base).href;
   if (url.startsWith('/api/')) return base + url.slice(4);
   return url;
 };
+const cacheable = (p) =>
+  /^\/(posts(?:\/|\?|$)|events(?:\?|$|\/[0-9]+$)|communities(?:\?|$|\/[0-9]+$)|location\/catalog|search\?|users\/(?:me\/communities|[a-f0-9-]{36}(?:\/communities)?)(?:\?|$))/.test(
+    p,
+  ) &&
+  !p.includes('/media/') &&
+  !p.includes('/comments');
 export async function api(path, options = {}) {
-  let response;
+  const method = (options.method || 'GET').toUpperCase(),
+    owner = await currentOwner().catch(() => null),
+    cached = method === 'GET' && cacheable(path) && owner !== null;
+  if (getTabOwner() && owner && getTabOwner() !== owner)
+    throw Object.assign(
+      Error('La cuenta cambió en otra pestaña. Vuelve a abrir esta pantalla.'),
+      { status: 409 },
+    );
   try {
-    response = await fetch(base + path, {
-      credentials: 'include',
+    const data = await networkApi(path, {
       ...options,
       headers: {
-        ...(options.body instanceof FormData
-          ? {}
-          : { 'Content-Type': 'application/json' }),
+        ...((cached || (method !== 'GET' && !path.startsWith('/auth/'))) &&
+        owner
+          ? { 'X-Ayni-Owner': owner }
+          : {}),
         ...options.headers,
       },
     });
-  } catch {
-    throw new Error(
-      'No se pudo conectar con el backend de Ayni. Comprueba que esté iniciado.',
-    );
-  }
-  if (response.status === 204) return null;
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    const error = new Error(
-      data?.error ||
-        'El backend no está disponible. Inicia Backend Ayni y revisa su configuración.',
-    );
-    error.status = response.status;
-    error.details = data?.details;
+    if (owner && (await currentOwner().catch(() => null)) !== owner)
+      throw Object.assign(
+        Error('La cuenta cambió. Vuelve a abrir esta pantalla.'),
+        { status: 409 },
+      );
+    if (cached) await saveSnapshot(owner, path, data).catch(() => {});
+    if (method !== 'GET' && owner && !path.startsWith('/uploads'))
+      await clearSnapshots(owner).catch(() => {});
+    return data;
+  } catch (error) {
+    if ([401, 403, 404].includes(error.status) && owner)
+      await clearSnapshots(owner).catch(() => {});
+    if (cached && error.network) {
+      const data = await readSnapshot(owner, path).catch(() => null);
+      if (data && (await currentOwner().catch(() => null)) === owner)
+        return data;
+    }
     throw error;
   }
-  return data;
 }
 export async function uploadPhoto(file) {
   if (!file?.size) return null;
@@ -61,8 +85,12 @@ export async function savePublication(data, module) {
     'start',
     'end',
     'mode',
+    'address',
   ])
     if (data.get(key)) payload[key] = data.get(key);
+  for (const key of ['latitude', 'longitude'])
+    if (data.get(key) !== null && data.get(key) !== '')
+      payload[key] = Number(data.get(key));
   if (data.get('quantity')) payload.quantity = Number(data.get('quantity'));
   if (data.getAll('days').length) payload.days = data.getAll('days').join(', ');
   if (module === 'emprendimiento') {
@@ -71,14 +99,8 @@ export async function savePublication(data, module) {
   }
   if (payload.start && payload.end && payload.end <= payload.start)
     throw new Error('La hora final debe ser posterior a la hora de inicio.');
-  const media = await uploadPhoto(data.get('photo'));
-  if (media) payload.mediaId = media.id;
-  const result = await api('/posts', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-  window.dispatchEvent(new Event('ayni:posts-updated'));
-  return result;
+  const file = data.get('photo');
+  return submitPost(payload, file?.size ? [file] : []);
 }
 export async function saveBusiness(event, document) {
   const form = event.currentTarget;

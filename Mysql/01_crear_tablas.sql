@@ -51,6 +51,10 @@ CREATE TABLE IF NOT EXISTS publicaciones (
  district VARCHAR(120) NOT NULL,
  neighborhood VARCHAR(160) NOT NULL,
  community_id BIGINT UNSIGNED NULL,
+ address VARCHAR(255) NULL,latitude DECIMAL(10,7) NULL,longitude DECIMAL(10,7) NULL,
+ client_request_id CHAR(36) NULL,sync_hash CHAR(64) NULL,
+ UNIQUE KEY uq_publicacion_solicitud(author_id,client_request_id),
+ INDEX idx_publicacion_distrito(district,module,status),
  status ENUM('active','completed','archived') NOT NULL DEFAULT 'active',
  pinned BOOLEAN NOT NULL DEFAULT FALSE,
  resolved BOOLEAN NOT NULL DEFAULT FALSE,
@@ -108,6 +112,8 @@ CREATE TABLE IF NOT EXISTS archivos_multimedia (
  url VARCHAR(255) NOT NULL UNIQUE,
  mime_type VARCHAR(50) NOT NULL,
  size_bytes INT UNSIGNED NOT NULL,
+ client_request_id CHAR(36) NULL,
+ UNIQUE KEY uq_archivo_solicitud(owner_id,client_request_id),
  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
  FOREIGN KEY(owner_id) REFERENCES usuarios(id) ON DELETE CASCADE,
  FOREIGN KEY(post_id) REFERENCES publicaciones(id) ON DELETE SET NULL
@@ -135,6 +141,7 @@ CREATE TABLE IF NOT EXISTS comentarios (
 CREATE TABLE IF NOT EXISTS eventos (
  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
  organizer_id CHAR(36) NOT NULL,
+ district VARCHAR(120) NULL,
  title VARCHAR(160) NOT NULL,
  description TEXT NOT NULL,
  category VARCHAR(80) NOT NULL,
