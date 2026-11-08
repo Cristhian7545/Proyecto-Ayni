@@ -21,3 +21,6 @@ Backend Ayni/uploads/*
 # Archivos del sistema
 .DS_Store
 Thumbs.db
+
+# Copia privada con credenciales reales
+/ENV-COMPLETO-LOCAL.txt

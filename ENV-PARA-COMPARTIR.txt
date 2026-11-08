@@ -1,0 +1,44 @@
+CONFIGURACION DE EJEMPLO PARA COMPARTIR AYNI
+
+Las credenciales están vacías. Cada persona completa sus propios datos.
+Copia cada sección a su archivo .env correspondiente, sin mezclar las dos.
+Guía de instalación: INSTALACION-Y-COMANDOS.md.
+
+# ========== Backend Ayni/.env ==========
+# Completa DB_USER y DB_PASSWORD localmente. Nunca publiques este archivo con secretos.
+HOST=127.0.0.1
+PORT=3001
+NODE_ENV=development
+FRONTEND_ORIGINS=http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:4173,http://localhost:4173
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=ayni
+DB_USER=root
+DB_PASSWORD=
+SESSION_DAYS=7
+# Activar solo temporalmente para probar la API con una base dedicada vacía:
+RUN_DB_TESTS=0
+
+FRONTEND_URL=http://127.0.0.1:5173
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=
+SMTP_PASSWORD=
+MAIL_FROM=
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_FROM=
+SMS_MAX_RECIPIENTS=25
+ADMIN_EMAIL=admin@example.com
+
+# Generada automáticamente por db:init / db:migrate:community. Nunca publicar la clave real.
+RECOVERY_CODE_SECRET=
+
+# ========== Frontend Ayni/.env ==========
+VITE_API_BASE=/api
+VITE_BACKEND_TARGET=http://127.0.0.1:3001
+
+# Opcional: activar Maps JavaScript API y restringir la clave a tu origen.
+VITE_GOOGLE_MAPS_API_KEY=
+VITE_GOOGLE_MAPS_MAP_ID=
