@@ -1,0 +1,23 @@
+# Dependencias y resultados generados
+node_modules/
+dist/
+.vite/
+coverage/
+*.log
+
+# Configuración y credenciales locales; conservar solo plantillas
+.env
+.env.*
+!.env.example
+.admin-inicial.txt
+*.pem
+*.key
+
+# Datos privados de MySQL y archivos subidos por usuarios
+Mysql/respaldos/
+Backend Ayni/uploads/*
+!Backend Ayni/uploads/.gitkeep
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
