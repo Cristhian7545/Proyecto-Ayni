@@ -24,7 +24,7 @@ npm run dev
 
 Abre http://127.0.0.1:5173 . MySQL debe estar encendido; las credenciales siguen en Backend Ayni/.env. No se cambiaron ni se imprimieron.
 
-## Base de datos en español
+## Base de datos 
 
 La base sigue llamándose **ayni**, con **25 tablas en español**. Se renombraron las existentes conservando sus filas, claves y relaciones. Antes de migrar se guardó un respaldo local de estructura y datos en Mysql/respaldos. Es privado: no lo publiques ni lo agregues a Git.
 
