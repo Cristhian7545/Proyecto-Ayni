@@ -1,0 +1,20 @@
+-- Ejecutar solo si las tablas todavía están en inglés. El migrador comprueba su estado.
+RENAME TABLE
+`users` TO `usuarios`,
+`sessions` TO `sesiones`,
+`posts` TO `publicaciones`,
+`exchange_details` TO `detalles_trueque`,
+`solidarity_details` TO `detalles_apoyo`,
+`business_details` TO `detalles_emprendimiento`,
+`availability` TO `disponibilidad`,
+`media` TO `archivos_multimedia`,
+`post_likes` TO `me_gusta_publicaciones`,
+`comments` TO `comentarios`,
+`events` TO `eventos`,
+`event_interests` TO `intereses_eventos`,
+`communities` TO `comunidades`,
+`community_members` TO `miembros_comunidad`,
+`conversations` TO `conversaciones`,
+`conversation_posts` TO `publicaciones_conversacion`,
+`messages` TO `mensajes`,
+`reviews` TO `resenas`;
